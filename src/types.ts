@@ -151,10 +151,21 @@ export interface ExplorationPoint {
   icon: string;
 }
 
+export type UiMode = 'game' | 'classic';
+
 export interface SettingsConfig {
   callSign: string;
   audioEnabled: boolean;
   novaVoiceEnabled: boolean;
   textSize: 'normal' | 'large';
+  /** Performance mode for weaker hardware (lower DPR, fewer effects). */
   lowPerformanceMode: boolean;
+  /** Reduce camera shake, flashing and non-essential animation. */
+  reducedMotion: boolean;
+  /** Show captions for radio chatter, NOVA and cinematics. */
+  captionsEnabled: boolean;
+  /** 0 - 1 master volume for the (future) audio engine. */
+  masterVolume: number;
+  /** 'classic' = original dashboard app (temporary); 'game' = first-person game shell. */
+  uiMode: UiMode;
 }

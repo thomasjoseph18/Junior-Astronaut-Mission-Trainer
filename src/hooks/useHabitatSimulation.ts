@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import type {
   Destination,
   HabitatSimulationState,
@@ -20,8 +20,10 @@ export type SimulationMap = Record<Destination, HabitatSimulationState>;
 
 /**
  * React wrapper around the pure simulation engine (src/engine/simulation.ts).
- * Moon and Mars keep INDEPENDENT progress: switching destination never resets either.
- * Achievements are emitted only through real game events (see engine/achievements.ts).
+ * - Moon and Mars keep INDEPENDENT progress: switching destination never resets either.
+ * - Every action reads the latest state from a ref that is updated synchronously, so several
+ *   actions fired in the same tick (e.g. from in-world controls) never overwrite each other.
+ * - Achievements are emitted only as real game events (see engine/achievements.ts).
  */
 export function useHabitatSimulation(
   destination: Destination,
@@ -41,65 +43,69 @@ export function useHabitatSimulation(
         mars: getInitialSimulationState('mars'),
       },
   );
+  const simsRef = useRef<SimulationMap>(sims);
 
   const state = sims[destination];
 
-  const commit = useCallback(
-    (next: HabitatSimulationState) => {
-      const merged = { ...sims, [destination]: next };
+  /** Apply a pure transition to the active destination only. Returns the new state. */
+  const update = useCallback(
+    (fn: (prev: HabitatSimulationState) => HabitatSimulationState): HabitatSimulationState => {
+      const prev = simsRef.current[destination];
+      const next = fn(prev);
+      if (next === prev) return prev;
+      const merged = { ...simsRef.current, [destination]: next };
+      simsRef.current = merged;
       setSims(merged);
       onSimulationsChange?.(merged);
+      return next;
     },
-    [sims, destination, onSimulationsChange],
+    [destination, onSimulationsChange],
   );
 
   const calculations = useMemo(() => computeCalculations(state, destination), [state, destination]);
 
-  const setO2Mode = useCallback((mode: O2Mode) => commit({ ...state, o2Mode: mode }), [commit, state]);
+  const setO2Mode = useCallback((mode: O2Mode) => { update((p) => ({ ...p, o2Mode: mode })); }, [update]);
 
   const setWaterRecyclerMode = useCallback(
-    (mode: WaterRecyclerMode) => commit({ ...state, waterRecyclerMode: mode }),
-    [commit, state],
+    (mode: WaterRecyclerMode) => { update((p) => ({ ...p, waterRecyclerMode: mode })); },
+    [update],
   );
 
   const setWaterRation = useCallback(
-    (ration: WaterRation) => commit({ ...state, waterRation: ration }),
-    [commit, state],
+    (ration: WaterRation) => { update((p) => ({ ...p, waterRation: ration })); },
+    [update],
   );
 
   const toggleIceSmelting = useCallback(() => {
-    const next = actions.toggleIceSmelting(state);
-    commit(next);
+    const next = update(actions.toggleIceSmelting);
     if (next.iceSmeltingActive) onGameEvent?.({ type: 'ice_smelter_started' });
-  }, [commit, state, onGameEvent]);
+  }, [update, onGameEvent]);
 
   const togglePowerAllocation = useCallback(
-    (key: keyof PowerAllocation) => commit(actions.togglePowerAllocation(state, key)),
-    [commit, state],
+    (key: keyof PowerAllocation) => { update((p) => actions.togglePowerAllocation(p, key)); },
+    [update],
   );
 
   const cleanSolarPanels = useCallback(() => {
-    onGameEvent?.({ type: 'solar_cleaned', dustBefore: state.solarDustAccumulation });
-    commit(actions.cleanSolarPanels(state));
-  }, [commit, state, onGameEvent]);
+    const dustBefore = simsRef.current[destination].solarDustAccumulation;
+    update(actions.cleanSolarPanels);
+    onGameEvent?.({ type: 'solar_cleaned', dustBefore });
+  }, [update, destination, onGameEvent]);
 
-  const useEmergencyO2Canister = useCallback(
-    () => commit(actions.useEmergencyO2Canister(state)),
-    [commit, state],
-  );
+  const useEmergencyO2Canister = useCallback(() => { update(actions.useEmergencyO2Canister); }, [update]);
 
   const advanceSol = useCallback(() => {
-    const result = advanceSolState(state, destination);
+    const result = advanceSolState(simsRef.current[destination], destination);
     if (!result) return;
-    commit(result.state);
+    update(() => result.state);
     onGameEvent?.({ type: 'sol_completed', facts: result.facts });
     onJournalAdd?.(result.journalEntry, destination);
-  }, [state, destination, commit, onGameEvent, onJournalAdd]);
+  }, [update, destination, onGameEvent, onJournalAdd]);
 
   /** Restarts ONLY the active destination. */
   const resetSimulation = useCallback(() => {
-    commit(getInitialSimulationState(destination));
-  }, [commit, destination]);
+    update(() => getInitialSimulationState(destination));
+  }, [update, destination]);
 
   return {
     state,
