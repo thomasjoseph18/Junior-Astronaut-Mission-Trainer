@@ -157,6 +157,7 @@ export function App() {
               onNavigate={setCurrentTab}
               destination={destination}
               simulationState={simulation.state}
+              onSelectDestination={handleSelectDestination}
             />
           )}
 
@@ -164,6 +165,7 @@ export function App() {
             <MissionSelectView
               selectedDestination={destination}
               onSelectDestination={handleSelectDestination}
+              onNavigateToHabitat={() => setCurrentTab('habitat')}
             />
           )}
 

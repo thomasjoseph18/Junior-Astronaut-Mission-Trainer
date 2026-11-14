@@ -8,6 +8,7 @@ import {
   Gauge,
   User,
   ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import { SettingsConfig } from '../../types';
 
@@ -21,140 +22,156 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onUpdateSettings,
 }) => {
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn pb-8">
+    <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn pb-12">
       
-      {/* Header */}
-      <div className="flex items-center space-x-3 p-6 rounded-3xl border border-blue-900/60 bg-[#070F2B]/90 backdrop-blur-xl">
-        <div className="w-12 h-12 rounded-2xl bg-blue-950 border border-blue-800 flex items-center justify-center text-cyan-400 shadow-md">
-          <SettingsIcon className="w-6 h-6" />
+      {/* Header Banner */}
+      <div className="rounded-3xl border border-cyan-500/30 bg-gradient-to-r from-[#06122d]/95 via-[#081a3d]/90 to-[#040e24]/95 p-6 sm:p-7 backdrop-blur-2xl shadow-xl flex items-center justify-between">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-13 h-13 rounded-2xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-md">
+            <SettingsIcon className="w-7 h-7" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
+                FLIGHT DECK CONFIGURATION
+              </span>
+              <span className="text-xs font-mono text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40">
+                SYSTEM PREFERENCES
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white">
+              Astronaut Trainer Settings
+            </h1>
+          </div>
         </div>
-        <div>
-          <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold block">
-            FLIGHT DECK CONFIGURATION
-          </span>
-          <h2 className="text-2xl font-bold text-white">Trainer Settings</h2>
+
+        <div className="hidden sm:flex items-center space-x-2 text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-3 py-1.5 rounded-xl">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>CONFIG SYNCHRONIZED</span>
         </div>
       </div>
 
-      {/* Settings Cards */}
-      <div className="p-6 rounded-3xl border border-slate-800 bg-[#070F2B]/85 backdrop-blur-md space-y-6 shadow-xl">
+      {/* Settings Panel Grid */}
+      <div className="p-6 sm:p-8 rounded-3xl border border-slate-800 bg-[#070F2B]/90 backdrop-blur-xl space-y-6 shadow-xl">
         
         {/* Astronaut Call-Sign */}
-        <div className="space-y-2 pb-5 border-b border-slate-800">
-          <label className="flex items-center space-x-2 text-xs font-mono font-semibold text-cyan-300">
+        <div className="space-y-2.5 pb-6 border-b border-slate-800/80">
+          <label className="flex items-center space-x-2 text-xs font-mono font-bold text-cyan-300">
             <User className="w-4 h-4 text-cyan-400" />
-            <span>ASTRONAUT CALL-SIGN (NAME)</span>
+            <span>ASTRONAUT CALL-SIGN / CADET NAME</span>
           </label>
-          <input
-            type="text"
-            value={settings.callSign}
-            onChange={(e) => onUpdateSettings({ callSign: e.target.value })}
-            className="w-full sm:w-80 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white font-medium focus:outline-none focus:border-cyan-400"
-            placeholder="e.g. Commander Armstrong"
-          />
-          <p className="text-[11px] text-slate-400">
-            This call-sign will be stamped onto your official Sol 1 Mission Journal entries and certificates.
-          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              value={settings.callSign}
+              onChange={(e) => onUpdateSettings({ callSign: e.target.value })}
+              className="w-full sm:w-80 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white font-mono font-medium focus:outline-none focus:border-cyan-400 shadow-inner"
+              placeholder="e.g. Commander Armstrong"
+            />
+            <span className="text-xs text-slate-400 self-center">
+              Stamped onto all Sol flight journal records and mission graduation certificates.
+            </span>
+          </div>
         </div>
 
         {/* Audio Effects */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs font-mono font-semibold text-slate-200">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
               {settings.audioEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
-              <span>MISSION SOUND EFFECTS</span>
+              <span>SPACECRAFT AUDIO &amp; RADIO ACOUSTICS</span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Play authentic Apollo thruster acoustic effects and radio beeps.
+            <p className="text-xs text-slate-400">
+              Play Apollo thruster soundscapes, airlock pressure equalization, and telemetry radio beeps.
             </p>
           </div>
           <button
             onClick={() => onUpdateSettings({ audioEnabled: !settings.audioEnabled })}
-            className={`px-4 py-2 rounded-xl font-bold text-xs transition-colors ${
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${
               settings.audioEnabled
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-800 text-slate-400'
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/50'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
             }`}
           >
-            {settings.audioEnabled ? 'SOUND: ON' : 'SOUND: MUTED'}
+            {settings.audioEnabled ? 'SOUND EFFECTS: ON' : 'SOUND EFFECTS: MUTED'}
           </button>
         </div>
 
         {/* NOVA Voice Companion */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs font-mono font-semibold text-slate-200">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
               <Bot className="w-4 h-4 text-cyan-400" />
-              <span>N.O.V.A. COPILOT SPEECH</span>
+              <span>N.O.V.A. COPILOT SPEECH SYNTHESIZER</span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Allow NOVA to speak advice and read mission facts aloud.
+            <p className="text-xs text-slate-400">
+              Enable N.O.V.A. to synthesize tactical advice, emergency alerts, and STEM space facts aloud.
             </p>
           </div>
           <button
             onClick={() => onUpdateSettings({ novaVoiceEnabled: !settings.novaVoiceEnabled })}
-            className={`px-4 py-2 rounded-xl font-bold text-xs transition-colors ${
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${
               settings.novaVoiceEnabled
-                ? 'bg-cyan-600 text-white'
-                : 'bg-slate-800 text-slate-400'
+                ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-950/50'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
             }`}
           >
-            {settings.novaVoiceEnabled ? 'VOICE: ACTIVE' : 'VOICE: OFF'}
+            {settings.novaVoiceEnabled ? 'VOICE COPILOT: ACTIVE' : 'VOICE COPILOT: OFF'}
           </button>
         </div>
 
         {/* Text Size Accessibility */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs font-mono font-semibold text-slate-200">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
               <Type className="w-4 h-4 text-cyan-400" />
-              <span>INTERFACE TEXT SIZE</span>
+              <span>INTERFACE TYPOGRAPHY SCALE</span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Adjust typography scale for young readers and junior cadets.
+            <p className="text-xs text-slate-400">
+              Adjust text sizing for classroom displays, tablets, or junior readers (ages 7–9).
             </p>
           </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => onUpdateSettings({ textSize: 'normal' })}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 settings.textSize === 'normal'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-400'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50'
+                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
-              Standard
+              Standard Scale
             </button>
             <button
               onClick={() => onUpdateSettings({ textSize: 'large' })}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 settings.textSize === 'large'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-400'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50'
+                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
-              Large Text (Ages 7-9)
+              Large Text (Ages 7–9)
             </button>
           </div>
         </div>
 
-        {/* Graphics Performance */}
+        {/* Graphics Performance Mode */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs font-mono font-semibold text-slate-200">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
               <Gauge className="w-4 h-4 text-cyan-400" />
-              <span>3D GRAPHICS QUALITY</span>
+              <span>3D GRAPHICS PERFORMANCE ACCELERATION</span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Optimize rendering for classroom tablets, Chromebooks, or desktop gaming PCs.
+            <p className="text-xs text-slate-400">
+              Adaptive canvas pixel ratio for classroom Chromebooks, mobile devices, and high-performance desktop displays.
             </p>
           </div>
           <button
             onClick={() => onUpdateSettings({ lowPerformanceMode: !settings.lowPerformanceMode })}
-            className={`px-4 py-2 rounded-xl font-bold text-xs transition-colors ${
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${
               settings.lowPerformanceMode
-                ? 'bg-amber-600 text-white'
-                : 'bg-blue-600 text-white'
+                ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-950/50'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-950/50'
             }`}
           >
             {settings.lowPerformanceMode ? 'BATTERY SAVER (30 FPS)' : 'MAX QUALITY (60 FPS)'}
@@ -163,10 +180,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       </div>
 
-      {/* Safety Notice */}
-      <div className="p-4 rounded-2xl bg-blue-950/40 border border-blue-900/60 flex items-center space-x-3 text-xs text-slate-300 font-mono">
-        <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-        <span>Child-Safe Environment: Compliant with NASA STEM Education Privacy Guidelines. No external personal data tracked.</span>
+      {/* Safety & Educational Privacy Badge */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex items-center space-x-3 text-xs text-slate-300 font-mono">
+        <ShieldCheck className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+        <span>
+          <strong>NASA STEM Education Safe:</strong> Fully client-side offline execution. Zero tracking, zero ads, and strict student privacy compliance.
+        </span>
       </div>
 
     </div>
