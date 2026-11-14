@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { PointerLockControls, KeyboardControls, useKeyboardControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { LunarTerrain } from './LunarTerrain';
+import { LunarTerrain, lunarHeight } from './LunarTerrain';
 import { LunarSky } from './LunarSky';
 import { HabitatMesh } from './HabitatMesh';
 import { ExplorationMarkers } from './ExplorationMarkers';
@@ -16,22 +16,24 @@ const KEYBOARD_MAP = [
   { name: 'sprint',   keys: ['ShiftLeft',  'ShiftRight'] },
 ];
 
-const WALK_SPEED   = 8;
-const SPRINT_SPEED = 20;
-const EYE_HEIGHT   = 1.7;
+const WALK_SPEED   = 9;
+const SPRINT_SPEED = 22;
+const EYE_HEIGHT   = 1.75;
 
 const _forward  = new THREE.Vector3();
 const _right    = new THREE.Vector3();
-const _velocity = new THREE.Vector3();
 
-function CameraController() {
+function CameraController({ lowPerformanceMode: _lowPerformanceMode }: { lowPerformanceMode: boolean }) {
   const { camera } = useThree();
   const [, getKeys] = useKeyboardControls<string>();
   const initialised = useRef(false);
 
   useEffect(() => {
     if (!initialised.current) {
-      camera.position.set(0, EYE_HEIGHT, 10);
+      // Start just outside the habitat landing pad, facing it
+      const startX = 0;
+      const startZ = 12;
+      camera.position.set(startX, lunarHeight(startX, startZ) + EYE_HEIGHT, startZ);
       initialised.current = true;
     }
   }, [camera]);
@@ -42,34 +44,27 @@ function CameraController() {
     };
 
     const speed = sprint ? SPRINT_SPEED : WALK_SPEED;
-    const dt = Math.min(delta, 0.05); // cap at 50 ms to prevent huge jumps
-
-    // Build movement vector in camera-local space (XZ plane only)
-    _velocity.set(0, 0, 0);
+    const dt = Math.min(delta, 0.05);
 
     if (forward || backward || left || right) {
-      // Camera's forward direction projected onto XZ plane
       camera.getWorldDirection(_forward);
       _forward.y = 0;
       _forward.normalize();
-
-      // Camera's right direction
       _right.crossVectors(_forward, camera.up).normalize();
 
-      if (forward)  _velocity.addScaledVector(_forward, speed * dt);
-      if (backward) _velocity.addScaledVector(_forward, -speed * dt);
-      if (right)    _velocity.addScaledVector(_right,   speed * dt);
-      if (left)     _velocity.addScaledVector(_right,  -speed * dt);
+      if (forward)  camera.position.addScaledVector(_forward,  speed * dt);
+      if (backward) camera.position.addScaledVector(_forward, -speed * dt);
+      if (right)    camera.position.addScaledVector(_right,    speed * dt);
+      if (left)     camera.position.addScaledVector(_right,   -speed * dt);
     }
 
-    // Boundary clamp — keep inside terrain bounds
-    const nextX = camera.position.x + _velocity.x;
-    const nextZ = camera.position.z + _velocity.z;
-    camera.position.x = Math.max(-185, Math.min(185, nextX));
-    camera.position.z = Math.max(-185, Math.min(185, nextZ));
+    // Terrain-aware eye height: sample height function at current XZ
+    const groundY = lunarHeight(camera.position.x, camera.position.z);
+    camera.position.y = groundY + EYE_HEIGHT;
 
-    // Lock eye height above terrain (simplified: constant EYE_HEIGHT above y=0 base)
-    camera.position.y = EYE_HEIGHT;
+    // Boundary clamp — stay on terrain plane
+    camera.position.x = Math.max(-185, Math.min(185, camera.position.x));
+    camera.position.z = Math.max(-185, Math.min(185, camera.position.z));
   });
 
   return null;
@@ -89,27 +84,18 @@ export function LunarPOVScene({
   onPointerLockChange,
 }: LunarPOVSceneProps) {
   const [selectedPoint, setSelectedPoint] = useState<ExplorationPoint | null>(null);
-  const controlsRef = useRef<{ lock: () => void; unlock: () => void } | null>(null);
 
   const handleSelectPoint = useCallback((pt: ExplorationPoint) => {
     setSelectedPoint(pt);
     onPointSelected(pt);
   }, [onPointSelected]);
 
-  const handlePointerLock = useCallback(() => {
-    if (onPointerLockChange) onPointerLockChange(true);
-  }, [onPointerLockChange]);
-
-  const handlePointerUnlock = useCallback(() => {
-    if (onPointerLockChange) onPointerLockChange(false);
-  }, [onPointerLockChange]);
+  const handlePointerLock   = useCallback(() => { if (onPointerLockChange) onPointerLockChange(true);  }, [onPointerLockChange]);
+  const handlePointerUnlock = useCallback(() => { if (onPointerLockChange) onPointerLockChange(false); }, [onPointerLockChange]);
 
   return (
     <KeyboardControls map={KEYBOARD_MAP}>
-      {/* Void sky background */}
-      <color attach="background" args={['#000005']} />
-
-      <LunarSky />
+      <LunarSky lowPerformanceMode={lowPerformanceMode} />
       <LunarTerrain lowPerformanceMode={lowPerformanceMode} />
       <HabitatMesh />
       <ExplorationMarkers
@@ -117,12 +103,8 @@ export function LunarPOVScene({
         selectedPointId={selectedPoint?.id ?? null}
         onUnlockAchievement={onUnlockAchievement}
       />
-
-      <CameraController />
-
+      <CameraController lowPerformanceMode={lowPerformanceMode} />
       <PointerLockControls
-        // @ts-expect-error – ref type from drei is compatible at runtime
-        ref={controlsRef}
         makeDefault
         onLock={handlePointerLock}
         onUnlock={handlePointerUnlock}

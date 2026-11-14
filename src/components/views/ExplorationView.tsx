@@ -96,8 +96,53 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
   const progressPercent = Math.round((totalExploredInDest / sites.length) * 100);
 
   return (
-    <div className="space-y-7 animate-fadeIn pb-16">
-      
+    <div className="space-y-6 animate-fadeIn pb-16">
+
+      {/* ── IMMERSIVE POV LAUNCH BANNER ── */}
+      {!isMars && onNavigateToPOV && (
+        <div className="dest-card-moon rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10" />
+          <div className="relative z-10 space-y-1">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold">
+              🌕 LUNAR SURFACE · FIRST-PERSON EVA MODE
+            </div>
+            <h2 className="font-display font-black text-white text-xl">
+              Enter Immersive Lunar POV
+            </h2>
+            <p className="text-xs text-slate-400 font-sans">
+              Walk the lunar surface, visit all 4 exploration sites in first-person, and unlock merit badges.
+            </p>
+          </div>
+          <button
+            onClick={onNavigateToPOV}
+            className="relative z-10 flex-shrink-0 flex items-center gap-3 px-6 py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-display font-black text-sm shadow-xl shadow-cyan-900/50 glow-cyan transition-all cursor-pointer active:scale-95"
+          >
+            <Crosshair className="w-5 h-5" />
+            <span>ENTER LUNAR POV</span>
+          </button>
+        </div>
+      )}
+
+      {isMars && (
+        <div className="dest-card-mars rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10" />
+          <div className="relative z-10 space-y-1">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-orange-400 font-bold">
+              🔴 MARS SURFACE · JEZERO CRATER
+            </div>
+            <h2 className="font-display font-black text-white text-xl">
+              Mars Surface POV — Coming Soon
+            </h2>
+            <p className="text-xs text-slate-400 font-sans">
+              Immersive first-person Mars exploration is in development. Survey the geological sites below using the 2D Radar interface.
+            </p>
+          </div>
+          <div className="relative z-10 flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl border border-orange-800/50 bg-orange-950/40 text-orange-400 font-tech font-bold text-xs cursor-not-allowed">
+            <span>COMING SOON</span>
+          </div>
+        </div>
+      )}
+
       {/* 1. TOP EVA FLIGHT HEADER BANNER */}
       <div className={`p-6 sm:p-8 rounded-3xl relative overflow-hidden ${isMars ? 'aerospace-hud-mars' : 'aerospace-hud'}`}>
         <div className="hud-corner-tl" />

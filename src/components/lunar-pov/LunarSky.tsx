@@ -1,73 +1,100 @@
+import { useEffect } from 'react';
 import { Stars } from '@react-three/drei';
+import { useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 
-export function LunarSky() {
+interface LunarSkyProps {
+  lowPerformanceMode?: boolean;
+}
+
+export function LunarSky({ lowPerformanceMode = false }: LunarSkyProps) {
+  const { scene } = useThree();
+
+  // Apply exponential fog for horizon depth
+  useEffect(() => {
+    const fog = new THREE.FogExp2(0x000208, 0.0022);
+    scene.fog = fog;
+    return () => {
+      scene.fog = null;
+    };
+  }, [scene]);
+
+  const starCount = lowPerformanceMode ? 1200 : 2800;
+
   return (
     <>
-      {/* Sun — primary directional key light from solar direction */}
+      {/* Background sky colour */}
+      <color attach="background" args={['#000005']} />
+
+      {/* Sun — sharp, unfiltered solar key light (no atmosphere on Moon) */}
       <directionalLight
-        position={[200, 120, -300]}
-        intensity={3.2}
-        color="#fffff5"
-        castShadow={false}
+        position={[180, 90, -280]}
+        intensity={3.5}
+        color="#fffff8"
       />
 
-      {/* Ambient fill — very dim blue-black (space environment) */}
-      <ambientLight intensity={0.15} color="#1a2040" />
-
-      {/* Backfill from Earth-shine direction */}
-      <pointLight
-        position={[-100, 50, 100]}
-        intensity={0.4}
-        color="#2244aa"
-        distance={800}
+      {/* Earth-shine hemisphere fill — simulates soft blue reflected light from Earth */}
+      <hemisphereLight
+        args={['#0d1828', '#181208', 0.5]}
       />
 
-      {/* Earth sphere */}
-      <group position={[-80, 160, -500]}>
-        {/* Core Earth */}
+      {/* Earth sphere group */}
+      <group position={[-60, 142, -420]}>
+        {/* Ocean base */}
         <mesh>
-          <sphereGeometry args={[14, 32, 32]} />
+          <sphereGeometry args={[20, 48, 32]} />
           <meshStandardMaterial
-            color="#1a3a6e"
-            emissive="#2244aa"
-            emissiveIntensity={0.6}
-            roughness={0.9}
-            metalness={0.0}
+            color="#0f2a52"
+            emissive="#1a3a70"
+            emissiveIntensity={0.5}
+            roughness={0.85}
+            metalness={0}
           />
         </mesh>
 
-        {/* Thin atmosphere halo */}
-        <mesh scale={1.045}>
-          <sphereGeometry args={[14, 32, 32]} />
+        {/* Cloud / continent layer */}
+        <mesh scale={1.015}>
+          <sphereGeometry args={[20, 32, 24]} />
           <meshBasicMaterial
-            color="#3a6ea8"
+            color="#7ab8e0"
             transparent
-            opacity={0.28}
-            side={2} /* THREE.DoubleSide */
+            opacity={0.22}
+            side={THREE.DoubleSide}
           />
         </mesh>
 
-        {/* Cloud layer suggestion */}
-        <mesh scale={1.02}>
-          <sphereGeometry args={[14, 24, 24]} />
+        {/* Atmosphere rim glow */}
+        <mesh scale={1.055}>
+          <sphereGeometry args={[20, 32, 24]} />
           <meshBasicMaterial
-            color="#8ab4d8"
+            color="#4080c0"
             transparent
-            opacity={0.12}
-            side={2}
+            opacity={0.14}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+
+        {/* Outer thin halo */}
+        <mesh scale={1.10}>
+          <sphereGeometry args={[20, 24, 16]} />
+          <meshBasicMaterial
+            color="#2050a0"
+            transparent
+            opacity={0.06}
+            side={THREE.DoubleSide}
           />
         </mesh>
       </group>
 
-      {/* Deep space starfield */}
+      {/* Deep-space starfield */}
       <Stars
-        radius={300}
-        depth={60}
-        count={2000}
-        factor={6}
+        radius={440}
+        depth={80}
+        count={starCount}
+        factor={5.5}
         saturation={0}
         fade
-        speed={0.3}
+        speed={0.2}
       />
     </>
   );

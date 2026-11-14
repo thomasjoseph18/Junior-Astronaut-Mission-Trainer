@@ -13,6 +13,7 @@ import { AchievementsView } from './components/views/AchievementsView';
 import { SettingsView } from './components/views/SettingsView';
 import { LunarPOVScene } from './components/lunar-pov/LunarPOVScene';
 import { POVHud } from './components/lunar-pov/POVHud';
+import { MissionDebriefScreen } from './components/MissionDebriefScreen';
 import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry, Achievement, ExplorationPoint } from './types';
 import { getInitialJournal } from './data/missions';
 import { INITIAL_ACHIEVEMENTS } from './data/achievements';
@@ -287,6 +288,18 @@ export function App() {
           <span>3D Celestial Viewport: Drag to inspect {destination === 'mars' ? 'Mars' : 'the Moon'}</span>
         </div>
       )}
+      {/* Mission Debrief Screen — full-screen overlay on victory or critical */}
+      {(simulation.state.missionStatus === 'victory' || simulation.state.missionStatus === 'critical') &&
+        currentTab !== 'lunar-pov' && (
+          <MissionDebriefScreen
+            status={simulation.state.missionStatus}
+            destination={destination}
+            simulationState={simulation.state}
+            onReset={handleResetSimulation}
+            onNavigate={setCurrentTab}
+          />
+        )
+      }
     </div>
   );
 }
