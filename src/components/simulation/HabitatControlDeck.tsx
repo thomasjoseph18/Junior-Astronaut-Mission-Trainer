@@ -65,7 +65,8 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
   const isSol30 = state.currentSol >= state.totalSols;
   const isMissionCritical = state.missionStatus === 'critical';
-  const isMissionVictory = state.missionStatus === 'victory' || isSol30;
+  // Bug 2 Fix: Show victory ONLY when missionStatus === 'victory' and never when critical
+  const isMissionVictory = state.missionStatus === 'victory' && !isMissionCritical;
 
   return (
     <div className="space-y-6">
@@ -134,7 +135,7 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
             )}
 
             {/* 3. Active Mission Advancement Button */}
-            {!isMissionCritical && !isMissionVictory && (
+            {!isMissionCritical && !isMissionVictory && !isSol30 && (
               <button
                 onClick={onAdvanceSol}
                 className="px-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-sm sm:text-base shadow-xl shadow-cyan-900/50 border border-cyan-300/40 flex items-center justify-center space-x-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer"

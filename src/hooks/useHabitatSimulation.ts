@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Destination,
   HabitatSimulationState,
@@ -278,6 +278,11 @@ export function useHabitatSimulation(
     getInitialSimulationState(destination)
   );
 
+  // Bug 1 Fix: Reset simulation to Sol 1 with destination-specific initial telemetry whenever destination changes
+  useEffect(() => {
+    setState(getInitialSimulationState(destination));
+  }, [destination]);
+
   // Calculate live power demand and generation deterministically
   const calculations = useMemo(() => {
     const isMars = destination === 'mars';
@@ -490,12 +495,16 @@ export function useHabitatSimulation(
 
     const newIntegrity = Math.min(100, Math.max(0, state.habitatIntegrity + integrityDelta));
 
-    // 8. Mission Status Check
+    // 8. Mission Status Check (Bug 2 Fix: mutually exclusive critical vs victory)
     let newStatus: 'active' | 'victory' | 'critical' = 'active';
     if (newO2 <= 5 || newWater <= 5 || newIntegrity <= 10) {
       newStatus = 'critical';
-    } else if (nextSol === 30 && newO2 > 15 && newWater > 15 && newIntegrity > 25) {
-      newStatus = 'victory';
+    } else if (nextSol >= 30) {
+      if (newO2 > 15 && newWater > 15 && newIntegrity > 25) {
+        newStatus = 'victory';
+      } else {
+        newStatus = 'critical';
+      }
     }
 
     // 9. Build Debrief Message

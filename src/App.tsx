@@ -9,13 +9,13 @@ import { MissionSelectView } from './components/views/MissionSelectView';
 import { JournalView } from './components/views/JournalView';
 import { SettingsView } from './components/views/SettingsView';
 import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry } from './types';
-import { INITIAL_JOURNAL } from './data/missions';
+import { getInitialJournal } from './data/missions';
 import { useHabitatSimulation } from './hooks/useHabitatSimulation';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
   const [destination, setDestination] = useState<Destination>('moon');
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(INITIAL_JOURNAL);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => getInitialJournal('moon'));
 
   const [settings, setSettings] = useState<SettingsConfig>({
     callSign: 'Cadet Commander',
@@ -50,10 +50,18 @@ export function App() {
     setJournalEntries((prev) => [newEntry, ...prev]);
   };
 
+  // Bug 1 Fix: Fresh simulation and destination-specific journal when destination switches
+  const handleSelectDestination = useCallback((newDest: Destination) => {
+    if (newDest !== destination) {
+      setDestination(newDest);
+      setJournalEntries(getInitialJournal(newDest));
+    }
+  }, [destination]);
+
   const handleResetSimulation = useCallback(() => {
     simulation.resetSimulation();
-    setJournalEntries(INITIAL_JOURNAL);
-  }, [simulation]);
+    setJournalEntries(getInitialJournal(destination));
+  }, [simulation, destination]);
 
   // Live Telemetry mapping for top status ribbon
   const currentTelemetry: SolTelemetry = {
@@ -116,9 +124,7 @@ export function App() {
           {currentTab === 'missions' && (
             <MissionSelectView
               selectedDestination={destination}
-              onSelectDestination={(dest) => {
-                setDestination(dest);
-              }}
+              onSelectDestination={handleSelectDestination}
             />
           )}
 
