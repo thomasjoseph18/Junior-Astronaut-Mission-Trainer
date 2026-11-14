@@ -1,6 +1,7 @@
-import { ExplorationPoint } from '../../types';
+import { ExplorationPoint, Destination } from '../../types';
 
 interface POVHudProps {
+  destination?: Destination;
   onExit: () => void;
   currentSol: number;
   oxygenLevel: number;
@@ -73,6 +74,7 @@ function ResourceBar({
 }
 
 export function POVHud({
+  destination = 'moon',
   onExit,
   currentSol,
   oxygenLevel,
@@ -83,6 +85,19 @@ export function POVHud({
   isPointerLocked,
   onRequestPointerLock,
 }: POVHudProps) {
+  const isMars = destination === 'mars';
+
+  // Destination-aware colour tokens
+  const accent      = isMars ? '#fb923c' : '#22d3ee';
+  const accentGlow  = isMars ? 'rgba(251,146,60,0.3)' : 'rgba(34,211,238,0.3)';
+  const accentBg    = isMars ? 'rgba(251,146,60,0.15)' : 'rgba(34,211,238,0.15)';
+  const accentDim   = isMars ? '#fed7aa' : '#67e8f9';
+  const locationLabel = isMars ? 'MARS SURFACE' : 'LUNAR SURFACE';
+  const exitLabel     = isMars ? '← EXIT MARS POV' : '← EXIT LUNAR POV';
+  const enterEmoji    = isMars ? '🔴' : '🌕';
+  const enterTitle    = isMars ? 'CLICK TO ENTER MARS POV' : 'CLICK TO ENTER LUNAR POV';
+  const o2Color       = isMars ? '#fb923c' : '#22d3ee';
+
   return (
     <div
       style={{
@@ -112,40 +127,38 @@ export function POVHud({
             alignItems: 'center',
             gap: '7px',
             background: 'rgba(2,6,23,0.88)',
-            border: '1.5px solid #22d3ee',
+            border: `1.5px solid ${accent}`,
             borderRadius: '999px',
             padding: '7px 16px',
-            color: '#22d3ee',
+            color: accent,
             fontFamily: 'monospace',
             fontSize: '11px',
             fontWeight: 'bold',
             letterSpacing: '0.08em',
             cursor: 'pointer',
             backdropFilter: 'blur(8px)',
-            boxShadow: '0 0 12px rgba(34,211,238,0.3)',
+            boxShadow: `0 0 12px ${accentGlow}`,
             transition: 'all 0.2s ease',
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              'rgba(34,211,238,0.15)';
+            (e.currentTarget as HTMLButtonElement).style.background = accentBg;
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              'rgba(2,6,23,0.88)';
+            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(2,6,23,0.88)';
           }}
         >
-          ← EXIT LUNAR POV
+          {exitLabel}
         </button>
         <div
           style={{
             fontFamily: 'monospace',
             fontSize: '10px',
-            color: '#67e8f9',
+            color: accentDim,
             paddingLeft: '8px',
             letterSpacing: '0.1em',
           }}
         >
-          SOL {currentSol} / 30 · LUNAR SURFACE
+          SOL {currentSol} / 30 · {locationLabel}
         </div>
       </div>
 
@@ -218,7 +231,7 @@ export function POVHud({
             >
               <span
                 style={{
-                  color: '#22d3ee',
+                  color: accent,
                   minWidth: '54px',
                   fontWeight: 'bold',
                 }}
@@ -257,9 +270,9 @@ export function POVHud({
         >
           Life Support
         </div>
-        <ResourceBar label="O₂" value={oxygenLevel} color="#22d3ee" />
-        <ResourceBar label="H₂O" value={waterLevel} color="#3b82f6" />
-        <ResourceBar label="PWR" value={batteryCharge} color="#facc15" />
+        <ResourceBar label="O₂"  value={oxygenLevel}   color={o2Color} />
+        <ResourceBar label="H₂O" value={waterLevel}    color="#3b82f6" />
+        <ResourceBar label="PWR" value={batteryCharge}  color="#facc15" />
       </div>
 
       {/* ── CLICK-TO-LOCK prompt (shown when not locked) ── */}
@@ -278,13 +291,12 @@ export function POVHud({
             onClick={onRequestPointerLock}
             style={{
               background: 'rgba(2,6,23,0.90)',
-              border: '1.5px solid #22d3ee',
+              border: `1.5px solid ${accent}`,
               borderRadius: '16px',
               padding: '24px 36px',
               cursor: 'pointer',
               backdropFilter: 'blur(12px)',
-              boxShadow:
-                '0 0 40px rgba(34,211,238,0.25), 0 0 80px rgba(34,211,238,0.1)',
+              boxShadow: `0 0 40px ${accentGlow}, 0 0 80px ${accentGlow}`,
               animation: 'pulse 2s cubic-bezier(0.4,0,0.6,1) infinite',
             }}
           >
@@ -294,19 +306,19 @@ export function POVHud({
                 marginBottom: '10px',
               }}
             >
-              🌕
+              {enterEmoji}
             </div>
             <div
               style={{
                 fontFamily: 'monospace',
                 fontSize: '13px',
                 fontWeight: 'bold',
-                color: '#22d3ee',
+                color: accent,
                 letterSpacing: '0.12em',
                 marginBottom: '6px',
               }}
             >
-              CLICK TO ENTER LUNAR POV
+              {enterTitle}
             </div>
             <div
               style={{
@@ -341,11 +353,11 @@ export function POVHud({
               maxWidth: '680px',
               width: '100%',
               background: 'rgba(2,6,23,0.95)',
-              border: '1.5px solid #22d3ee',
+              border: `1.5px solid ${accent}`,
               borderRadius: '16px',
               padding: '20px 24px',
               backdropFilter: 'blur(16px)',
-              boxShadow: '0 -4px 60px rgba(34,211,238,0.2)',
+              boxShadow: `0 -4px 60px ${accentGlow}`,
               position: 'relative',
             }}
           >
@@ -392,7 +404,7 @@ export function POVHud({
               style={{
                 fontFamily: 'monospace',
                 fontSize: '10px',
-                color: '#22d3ee',
+                color: accent,
                 letterSpacing: '0.08em',
                 marginBottom: '12px',
               }}

@@ -123,7 +123,7 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
         </div>
       )}
 
-      {isMars && (
+      {isMars && onNavigateToPOV && (
         <div className="dest-card-mars rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10" />
           <div className="relative z-10 space-y-1">
@@ -131,15 +131,19 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
               🔴 MARS SURFACE · JEZERO CRATER
             </div>
             <h2 className="font-display font-black text-white text-xl">
-              Mars Surface POV — Coming Soon
+              Enter Immersive Mars POV
             </h2>
             <p className="text-xs text-slate-400 font-sans">
-              Immersive first-person Mars exploration is in development. Survey the geological sites below using the 2D Radar interface.
+              Walk the Martian surface in first-person, visit all 4 exploration sites, and unlock merit badges.
             </p>
           </div>
-          <div className="relative z-10 flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl border border-orange-800/50 bg-orange-950/40 text-orange-400 font-tech font-bold text-xs cursor-not-allowed">
-            <span>COMING SOON</span>
-          </div>
+          <button
+            onClick={onNavigateToPOV}
+            className="relative z-10 flex-shrink-0 flex items-center gap-3 px-6 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-display font-black text-sm shadow-xl shadow-orange-900/50 glow-orange transition-all cursor-pointer active:scale-95"
+          >
+            <Crosshair className="w-5 h-5" />
+            <span>ENTER MARS POV</span>
+          </button>
         </div>
       )}
 

@@ -12,6 +12,7 @@ import { JournalView } from './components/views/JournalView';
 import { AchievementsView } from './components/views/AchievementsView';
 import { SettingsView } from './components/views/SettingsView';
 import { LunarPOVScene } from './components/lunar-pov/LunarPOVScene';
+import { MarsSurfaceScene } from './components/mars-pov/MarsSurfaceScene';
 import { POVHud } from './components/lunar-pov/POVHud';
 import { MissionDebriefScreen } from './components/MissionDebriefScreen';
 import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry, Achievement, ExplorationPoint } from './types';
@@ -130,7 +131,7 @@ export function App() {
         settings.textSize === 'large' ? 'text-base sm:text-lg' : 'text-sm'
       }`}
     >
-      {/* 3D Background Canvas — switches between orbital view and Lunar POV */}
+      {/* 3D Background Canvas — switches between orbital, Lunar POV, and Mars POV */}
       <div className="absolute inset-0 z-0">
         <Canvas
           camera={{ position: [0, 0, 5.8], fov: 45 }}
@@ -143,15 +144,23 @@ export function App() {
               onPointSelected={setPovSelectedPoint}
               onPointerLockChange={setPovPointerLocked}
             />
+          ) : currentTab === 'mars-pov' ? (
+            <MarsSurfaceScene
+              lowPerformanceMode={settings.lowPerformanceMode}
+              onUnlockAchievement={handleUnlockAchievement}
+              onPointSelected={setPovSelectedPoint}
+              onPointerLockChange={setPovPointerLocked}
+            />
           ) : (
             <TestScene destination={destination} />
           )}
         </Canvas>
       </div>
 
-      {/* Lunar POV HUD — full-screen overlay, only shown in POV mode */}
-      {currentTab === 'lunar-pov' && (
+      {/* POV HUD — full-screen overlay, shown in both lunar-pov and mars-pov modes */}
+      {(currentTab === 'lunar-pov' || currentTab === 'mars-pov') && (
         <POVHud
+          destination={currentTab === 'mars-pov' ? 'mars' : 'moon'}
           onExit={() => {
             setPovPointerLocked(false);
             setPovSelectedPoint(null);
@@ -165,15 +174,14 @@ export function App() {
           onDismissPoint={() => setPovSelectedPoint(null)}
           isPointerLocked={povPointerLocked}
           onRequestPointerLock={() => {
-            // Clicking the canvas will trigger pointer lock via PointerLockControls
             const canvas = document.querySelector('canvas');
             if (canvas) canvas.click();
           }}
         />
       )}
 
-      {/* NASA Top Navigation Bar — hidden in POV mode for full immersion */}
-      {currentTab !== 'lunar-pov' && (
+      {/* NASA Top Navigation Bar — hidden in POV modes */}
+      {currentTab !== 'lunar-pov' && currentTab !== 'mars-pov' && (
         <Navbar
           currentTab={currentTab}
           onTabChange={setCurrentTab}
@@ -184,16 +192,16 @@ export function App() {
         />
       )}
 
-      {/* Mission Telemetry Ribbon — hidden in POV mode */}
-      {currentTab !== 'lunar-pov' && (
+      {/* Mission Telemetry Ribbon — hidden in POV modes */}
+      {currentTab !== 'lunar-pov' && currentTab !== 'mars-pov' && (
         <MissionStatusRibbon
           telemetry={currentTelemetry}
           destination={destination}
         />
       )}
 
-      {/* Main Content Area — hidden in POV mode */}
-      {currentTab !== 'lunar-pov' && (
+      {/* Main Content Area — hidden in POV modes */}
+      {currentTab !== 'lunar-pov' && currentTab !== 'mars-pov' && (
         <div className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 scrollbar-thin scrollbar-thumb-slate-800">
           <div className="max-w-7xl mx-auto">
             {currentTab === 'home' && (
@@ -236,7 +244,7 @@ export function App() {
                 onSelectDestination={handleSelectDestination}
                 onUnlockAchievement={handleUnlockAchievement}
                 onNavigateToHabitat={() => setCurrentTab('habitat')}
-                onNavigateToPOV={() => setCurrentTab('lunar-pov')}
+                onNavigateToPOV={() => setCurrentTab(destination === 'mars' ? 'mars-pov' : 'lunar-pov')}
               />
             )}
 
@@ -267,8 +275,8 @@ export function App() {
         </div>
       )}
 
-      {/* NOVA AI Mission Copilot — hidden in POV mode */}
-      {currentTab !== 'lunar-pov' && (
+      {/* NOVA AI Mission Copilot — hidden in POV modes */}
+      {currentTab !== 'lunar-pov' && currentTab !== 'mars-pov' && (
         <div className="fixed bottom-4 right-4 z-40 w-[92vw] sm:w-96 max-w-sm">
           <NovaCompanion
             destination={destination}
@@ -281,8 +289,8 @@ export function App() {
         </div>
       )}
 
-      {/* Background 3D Viewport Hint — hidden in POV mode */}
-      {currentTab !== 'lunar-pov' && (
+      {/* Background 3D Viewport Hint — hidden in POV modes */}
+      {currentTab !== 'lunar-pov' && currentTab !== 'mars-pov' && (
         <div className="fixed bottom-4 left-4 z-20 hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-950/70 border border-slate-800/80 backdrop-blur-md text-[11px] font-mono text-slate-400 pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           <span>3D Celestial Viewport: Drag to inspect {destination === 'mars' ? 'Mars' : 'the Moon'}</span>
@@ -290,7 +298,7 @@ export function App() {
       )}
       {/* Mission Debrief Screen — full-screen overlay on victory or critical */}
       {(simulation.state.missionStatus === 'victory' || simulation.state.missionStatus === 'critical') &&
-        currentTab !== 'lunar-pov' && (
+        currentTab !== 'lunar-pov' && currentTab !== 'mars-pov' && (
           <MissionDebriefScreen
             status={simulation.state.missionStatus}
             destination={destination}

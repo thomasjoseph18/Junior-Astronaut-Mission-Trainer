@@ -1,4 +1,4 @@
-export type NavTab = 'home' | 'missions' | 'habitat' | 'exploration' | 'journal' | 'achievements' | 'settings' | 'lunar-pov';
+export type NavTab = 'home' | 'missions' | 'habitat' | 'exploration' | 'journal' | 'achievements' | 'settings' | 'lunar-pov' | 'mars-pov';
 
 export type Destination = 'moon' | 'mars';
 
