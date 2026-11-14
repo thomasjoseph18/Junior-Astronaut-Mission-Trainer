@@ -10,14 +10,20 @@ import {
   Info,
 } from 'lucide-react';
 import { JournalEntry, Destination } from '../../types';
-import { INITIAL_JOURNAL } from '../../data/missions';
 
 interface JournalViewProps {
   destination: Destination;
+  currentSol: number;
+  entries: JournalEntry[];
+  onAddEntry: (entry: JournalEntry) => void;
 }
 
-export const JournalView: React.FC<JournalViewProps> = ({ destination }) => {
-  const [entries, setEntries] = useState<JournalEntry[]>(INITIAL_JOURNAL);
+export const JournalView: React.FC<JournalViewProps> = ({
+  destination,
+  currentSol,
+  entries,
+  onAddEntry,
+}) => {
   const [customNote, setCustomNote] = useState('');
   const [authorName, setAuthorName] = useState('Cadet Commander');
 
@@ -27,20 +33,20 @@ export const JournalView: React.FC<JournalViewProps> = ({ destination }) => {
 
     const newEntry: JournalEntry = {
       id: `entry-${Date.now()}`,
-      sol: 1,
-      title: 'Cadet Surface Observation Log',
+      sol: currentSol,
+      title: `Cadet Sol ${currentSol} Surface Observation`,
       author: authorName,
-      timestamp: 'Mission Day 01 - Field Note',
+      timestamp: `Sol ${currentSol} - Field Observation`,
       body: customNote,
       badge: {
         name: 'Curious Explorer Pin',
         icon: 'Award',
-        description: 'Recorded an official Sol 1 scientific observation in the flight journal.',
+        description: `Recorded an official Sol ${currentSol} scientific observation in the flight journal.`,
       },
       scienceTip: 'Astronauts write field logs every single Sol so scientists on Earth can analyze discoveries!',
     };
 
-    setEntries([newEntry, ...entries]);
+    onAddEntry(newEntry);
     setCustomNote('');
   };
 
@@ -70,10 +76,10 @@ export const JournalView: React.FC<JournalViewProps> = ({ destination }) => {
                 FLIGHT DECK ARCHIVES
               </span>
               <span className="text-xs font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                SOL 1 ACTIVE
+                SOL {currentSol} ACTIVE
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-white">Mission Journal</h2>
+            <h2 className="text-2xl font-bold text-white">Mission Journal (Sol 1 - 30)</h2>
           </div>
         </div>
 
@@ -86,7 +92,7 @@ export const JournalView: React.FC<JournalViewProps> = ({ destination }) => {
       <div className="p-5 rounded-2xl border border-blue-800/60 bg-[#091533]/85 backdrop-blur-md shadow-xl space-y-3">
         <div className="flex items-center space-x-2 text-cyan-300 text-sm font-bold">
           <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>Record a Sol 1 Scientific Observation</span>
+          <span>Record a Sol {currentSol} Scientific Observation</span>
         </div>
         <p className="text-xs text-slate-300">
           What did you observe outside the habitat window? Type your discovery to earn your Explorer Badge!
@@ -112,7 +118,7 @@ export const JournalView: React.FC<JournalViewProps> = ({ destination }) => {
 
           <button
             type="submit"
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors shadow-md shadow-blue-600/30"
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors shadow-md shadow-blue-600/30 cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Save Log to NASA Telemetry</span>
@@ -139,6 +145,11 @@ export const JournalView: React.FC<JournalViewProps> = ({ destination }) => {
                 <Calendar className="w-3.5 h-3.5 text-slate-500" />
                 <span>{entry.timestamp}</span>
               </div>
+            </div>
+
+            {/* Author */}
+            <div className="text-[11px] font-mono text-cyan-400">
+              Logged by: <span className="text-slate-300">{entry.author}</span>
             </div>
 
             {/* Body */}

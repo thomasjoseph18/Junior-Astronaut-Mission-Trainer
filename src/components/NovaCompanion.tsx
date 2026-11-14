@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Bot,
   Sparkles,
@@ -13,15 +13,33 @@ import { Destination } from '../types';
 
 interface NovaCompanionProps {
   destination: Destination;
+  currentSol?: number;
+  lastDebriefMessage?: string;
+  solTip?: string;
 }
 
-export const NovaCompanion: React.FC<NovaCompanionProps> = ({ destination }) => {
+export const NovaCompanion: React.FC<NovaCompanionProps> = ({
+  destination,
+  currentSol = 1,
+  lastDebriefMessage,
+  solTip,
+}) => {
   const [minimized, setMinimized] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [activeSpeech, setActiveSpeech] = useState<string>(
-    "Greetings, Junior Commander! I'm N.O.V.A., your AI Mission Copilot! Welcome to Sol 1 of our 30-Sol expedition. I'm here to monitor life support, guide your daily science objectives, and share amazing space facts!"
+    "Greetings, Junior Commander! I'm N.O.V.A., your AI Mission Copilot! Welcome to Sol 1 of our 30-Sol expedition. I'm monitoring life support and ready to assist!"
   );
   const [speakingAnimation, setSpeakingAnimation] = useState(false);
+
+  // Sync NOVA when Sol advances
+  useEffect(() => {
+    if (lastDebriefMessage) {
+      setActiveSpeech(`Sol ${currentSol} Report: ${lastDebriefMessage}`);
+      setSpeakingAnimation(true);
+      const timer = setTimeout(() => setSpeakingAnimation(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSol, lastDebriefMessage]);
 
   const handleNextFact = () => {
     const nextIdx = (factIndex + 1) % NOVA_FACTS.length;
@@ -30,14 +48,16 @@ export const NovaCompanion: React.FC<NovaCompanionProps> = ({ destination }) => 
     triggerSpeechAnimation();
   };
 
-  const handleSol1Advice = () => {
-    if (destination === 'moon') {
+  const handleSolAdvice = () => {
+    if (solTip) {
+      setActiveSpeech(`Sol ${currentSol} Tactical Tip: ${solTip}`);
+    } else if (destination === 'moon') {
       setActiveSpeech(
-        "Sol 1 Lunar Tip: Remember, shadows at the lunar South Pole are super long and dark because the sun is always hugging the horizon! Always keep your suit lights charged!"
+        "Lunar Operations Tip: Shadows at the lunar South Pole are super long and dark because the sun is always hugging the horizon! Always keep your suit lights and rover battery charged!"
       );
     } else {
       setActiveSpeech(
-        "Sol 1 Mars Tip: Dust on Mars is very fine! Make sure the airlock electro-scrubber is running before stepping inside the pressurized habitat dome!"
+        "Mars Operations Tip: Dust on Mars is very fine! Make sure the airlock electro-scrubber is running before stepping inside the pressurized habitat dome!"
       );
     }
     triggerSpeechAnimation();
@@ -78,7 +98,7 @@ export const NovaCompanion: React.FC<NovaCompanionProps> = ({ destination }) => 
         <div className="flex items-center space-x-1">
           <button
             onClick={() => setMinimized(!minimized)}
-            className="p-1 rounded-md text-cyan-300 hover:text-white hover:bg-cyan-900/50 transition-colors"
+            className="p-1 rounded-md text-cyan-300 hover:text-white hover:bg-cyan-900/50 transition-colors cursor-pointer"
             title={minimized ? 'Expand NOVA' : 'Minimize NOVA'}
           >
             {minimized ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
@@ -109,23 +129,23 @@ export const NovaCompanion: React.FC<NovaCompanionProps> = ({ destination }) => 
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <button
               onClick={handleNextFact}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 border border-blue-400/40 text-white text-xs font-semibold shadow-sm transition-transform active:scale-95"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600/80 hover:bg-blue-600 border border-blue-400/40 text-white text-xs font-semibold shadow-sm transition-transform active:scale-95 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Space Fact</span>
             </button>
 
             <button
-              onClick={handleSol1Advice}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-cyan-200 text-xs font-semibold transition-transform active:scale-95"
+              onClick={handleSolAdvice}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-cyan-200 text-xs font-semibold transition-transform active:scale-95 cursor-pointer"
             >
               <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Sol 1 Tips</span>
+              <span>Sol {currentSol} Tips</span>
             </button>
 
             <button
               onClick={triggerSpeechAnimation}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs transition-colors"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs transition-colors cursor-pointer"
               title="Voice Synthesizer Test"
             >
               <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
@@ -142,7 +162,7 @@ export const NovaCompanion: React.FC<NovaCompanionProps> = ({ destination }) => 
           onClick={() => setMinimized(false)}
           className="px-4 py-2 text-xs text-cyan-300 font-mono flex items-center justify-between cursor-pointer hover:bg-cyan-950/40"
         >
-          <span className="truncate">N.O.V.A. Standing by for commands...</span>
+          <span className="truncate">N.O.V.A. (Sol {currentSol}) Standing by...</span>
           <span className="text-[10px] text-cyan-400 underline font-sans ml-2">Click to expand</span>
         </div>
       )}

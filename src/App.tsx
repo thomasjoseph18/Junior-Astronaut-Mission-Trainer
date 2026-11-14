@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Navbar } from './components/Navbar';
 import { MissionStatusRibbon } from './components/MissionStatusRibbon';
@@ -8,13 +8,15 @@ import { WelcomeView } from './components/views/WelcomeView';
 import { MissionSelectView } from './components/views/MissionSelectView';
 import { JournalView } from './components/views/JournalView';
 import { SettingsView } from './components/views/SettingsView';
-import { NavTab, Destination, SettingsConfig } from './types';
-import { INITIAL_TELEMETRY } from './data/missions';
+import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry } from './types';
+import { INITIAL_JOURNAL } from './data/missions';
+import { useHabitatSimulation } from './hooks/useHabitatSimulation';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
   const [destination, setDestination] = useState<Destination>('moon');
-  const [telemetry] = useState(INITIAL_TELEMETRY);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(INITIAL_JOURNAL);
+
   const [settings, setSettings] = useState<SettingsConfig>({
     callSign: 'Cadet Commander',
     audioEnabled: true,
@@ -23,12 +25,36 @@ export function App() {
     lowPerformanceMode: false,
   });
 
+  // Callback when simulation triggers a daily journal entry
+  const handleDailyJournalEntry = useCallback((entry: JournalEntry) => {
+    setJournalEntries((prev) => [entry, ...prev]);
+  }, []);
+
+  // Initialize Habitat 30-Sol Resource Simulation Engine
+  const simulation = useHabitatSimulation(destination, handleDailyJournalEntry);
+
   const handleUpdateSettings = (newSettings: Partial<SettingsConfig>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
   const handleToggleAudio = () => {
     setSettings((prev) => ({ ...prev, audioEnabled: !prev.audioEnabled }));
+  };
+
+  const handleAddCustomJournalEntry = (newEntry: JournalEntry) => {
+    setJournalEntries((prev) => [newEntry, ...prev]);
+  };
+
+  // Live Telemetry mapping for top status ribbon
+  const currentTelemetry: SolTelemetry = {
+    currentSol: simulation.state.currentSol,
+    totalSols: simulation.state.totalSols,
+    oxygenLevel: simulation.state.oxygenLevel,
+    waterLevel: simulation.state.waterLevel,
+    powerLevel: simulation.state.batteryCharge,
+    habitatTempC: simulation.state.habitatTempC,
+    habitatIntegrity: simulation.state.habitatIntegrity,
+    statusMessage: simulation.state.lastDebriefMessage,
   };
 
   return (
@@ -51,15 +77,15 @@ export function App() {
       <Navbar
         currentTab={currentTab}
         onTabChange={setCurrentTab}
-        currentSol={telemetry.currentSol}
-        totalSols={telemetry.totalSols}
+        currentSol={simulation.state.currentSol}
+        totalSols={simulation.state.totalSols}
         audioEnabled={settings.audioEnabled}
         onToggleAudio={handleToggleAudio}
       />
 
-      {/* Mission Telemetry Ribbon (Sol 1 of 30 + Life Support) */}
+      {/* Mission Telemetry Ribbon (Live Sol 1-30 + Life Support) */}
       <MissionStatusRibbon
-        telemetry={telemetry}
+        telemetry={currentTelemetry}
         destination={destination}
       />
 
@@ -70,6 +96,7 @@ export function App() {
             <WelcomeView
               onNavigate={setCurrentTab}
               destination={destination}
+              simulation={simulation}
             />
           )}
 
@@ -83,7 +110,12 @@ export function App() {
           )}
 
           {currentTab === 'journal' && (
-            <JournalView destination={destination} />
+            <JournalView
+              destination={destination}
+              currentSol={simulation.state.currentSol}
+              entries={journalEntries}
+              onAddEntry={handleAddCustomJournalEntry}
+            />
           )}
 
           {currentTab === 'settings' && (
@@ -97,7 +129,12 @@ export function App() {
 
       {/* NOVA AI Mission Copilot Panel (Docked at bottom-right) */}
       <div className="fixed bottom-4 right-4 z-40 w-[92vw] sm:w-96 max-w-sm">
-        <NovaCompanion destination={destination} />
+        <NovaCompanion
+          destination={destination}
+          currentSol={simulation.state.currentSol}
+          lastDebriefMessage={simulation.state.lastDebriefMessage}
+          solTip={simulation.state.currentEvent.tip}
+        />
       </div>
 
       {/* Background 3D Viewport Hint (Bottom Left) */}

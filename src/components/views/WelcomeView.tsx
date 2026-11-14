@@ -9,21 +9,50 @@ import {
   ShieldCheck,
   Globe2,
 } from 'lucide-react';
-import { NavTab, Destination } from '../../types';
+import {
+  NavTab,
+  Destination,
+  HabitatSimulationState,
+  O2Mode,
+  WaterRecyclerMode,
+  WaterRation,
+  PowerAllocation,
+} from '../../types';
+import { HabitatControlDeck } from '../simulation/HabitatControlDeck';
 
 interface WelcomeViewProps {
   onNavigate: (tab: NavTab) => void;
   destination: Destination;
+  simulation: {
+    state: HabitatSimulationState;
+    calculations: {
+      powerGenerated: number;
+      totalDemand: number;
+      netPowerKw: number;
+      o2Delta: number;
+      waterDelta: number;
+    };
+    setO2Mode: (mode: O2Mode) => void;
+    setWaterRecyclerMode: (mode: WaterRecyclerMode) => void;
+    setWaterRation: (ration: WaterRation) => void;
+    toggleIceSmelting: () => void;
+    togglePowerAllocation: (key: keyof PowerAllocation) => void;
+    cleanSolarPanels: () => void;
+    useEmergencyO2Canister: () => void;
+    advanceSol: () => void;
+    resetSimulation: () => void;
+  };
 }
 
 export const WelcomeView: React.FC<WelcomeViewProps> = ({
   onNavigate,
   destination,
+  simulation,
 }) => {
   const isMars = destination === 'mars';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn pb-8">
+    <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn pb-8">
       
       {/* Hero Welcome Card */}
       <div className="relative rounded-3xl border border-blue-800/60 bg-gradient-to-br from-[#0A1E4A]/90 via-[#071333]/90 to-[#040A1D]/90 p-6 sm:p-10 shadow-2xl shadow-blue-950/80 backdrop-blur-xl overflow-hidden">
@@ -89,7 +118,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
           <div className="pt-3 flex flex-wrap items-center gap-3">
             <button
               onClick={() => onNavigate('missions')}
-              className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/40 border border-blue-400/40 transition-all duration-200 transform hover:-translate-y-0.5"
+              className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/40 border border-blue-400/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
             >
               <Compass className="w-5 h-5 text-cyan-200" />
               <span>Launch Mission Selector</span>
@@ -98,14 +127,46 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
 
             <button
               onClick={() => onNavigate('journal')}
-              className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-sm border border-slate-700/80 transition-all duration-200"
+              className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-sm border border-slate-700/80 transition-all duration-200 cursor-pointer"
             >
               <BookOpen className="w-4 h-4 text-cyan-400" />
-              <span>View Sol 1 Journal</span>
+              <span>View Sol 1-30 Journal</span>
             </button>
           </div>
 
         </div>
+      </div>
+
+      {/* ================= 30-SOL HABITAT RESOURCE SIMULATION DECK ================= */}
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/50 flex items-center justify-center text-cyan-300">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold block">
+              PHASE 1 SIMULATION ENGINE
+            </span>
+            <h2 className="text-2xl font-black text-white">
+              30-Sol Habitat Resource Control Deck
+            </h2>
+          </div>
+        </div>
+
+        <HabitatControlDeck
+          state={simulation.state}
+          calculations={simulation.calculations}
+          destination={destination}
+          onSetO2Mode={simulation.setO2Mode}
+          onSetWaterRecyclerMode={simulation.setWaterRecyclerMode}
+          onSetWaterRation={simulation.setWaterRation}
+          onToggleIceSmelting={simulation.toggleIceSmelting}
+          onTogglePowerAllocation={simulation.togglePowerAllocation}
+          onCleanSolarPanels={simulation.cleanSolarPanels}
+          onUseEmergencyO2={simulation.useEmergencyO2Canister}
+          onAdvanceSol={simulation.advanceSol}
+          onResetSimulation={simulation.resetSimulation}
+        />
       </div>
 
       {/* Mission Quick Status / Active Target Banner */}
@@ -129,7 +190,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({
 
         <button
           onClick={() => onNavigate('missions')}
-          className="w-full sm:w-auto px-4 py-2 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono font-semibold text-cyan-300 hover:text-white transition-colors"
+          className="w-full sm:w-auto px-4 py-2 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono font-semibold text-cyan-300 hover:text-white transition-colors cursor-pointer"
         >
           Change Destination &rarr;
         </button>
