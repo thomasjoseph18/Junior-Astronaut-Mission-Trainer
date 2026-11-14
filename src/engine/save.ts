@@ -1,5 +1,6 @@
 // Versioned save system. Pure: storage is injected so it can be tested in Node.
-import type { Destination, HabitatSimulationState, JournalEntry } from '../types.ts';
+import type { Destination, HabitatSimulationState, JournalEntry, SettingsConfig } from '../types.ts';
+import { defaultSettings, sanitizeSettings } from './settings.ts';
 import { getInitialSimulationState } from './simulation.ts';
 
 export const SAVE_KEY = 'buildscapes_save';
@@ -24,9 +25,10 @@ export interface SaveGame {
   /** Sites the player has viewed in the classic Exploration screen (informational only). */
   viewedSites: string[];
   progress: { moonTrainingComplete: boolean; introSeen: boolean };
+  settings: SettingsConfig;
 }
 
-export function createNewSave(): SaveGame {
+export function createNewSave(prefersReducedMotion = false): SaveGame {
   return {
     version: SAVE_VERSION,
     simulations: { moon: getInitialSimulationState('moon'), mars: getInitialSimulationState('mars') },
@@ -35,6 +37,7 @@ export function createNewSave(): SaveGame {
     completedSites: [],
     viewedSites: [],
     progress: { moonTrainingComplete: false, introSeen: false },
+    settings: defaultSettings(prefersReducedMotion),
   };
 }
 
@@ -50,8 +53,8 @@ function safeParse(raw: string | null): unknown {
 }
 
 /** Validate/repair an unknown value into a SaveGame. Never throws. */
-export function migrateSave(raw: unknown): SaveGame {
-  const base = createNewSave();
+export function migrateSave(raw: unknown, prefersReducedMotion = false): SaveGame {
+  const base = createNewSave(prefersReducedMotion);
   if (!isObj(raw)) return base;
   const sims = isObj(raw.simulations) ? raw.simulations : {};
   for (const d of ['moon', 'mars'] as Destination[]) {
@@ -73,15 +76,16 @@ export function migrateSave(raw: unknown): SaveGame {
     base.progress.moonTrainingComplete = raw.progress.moonTrainingComplete === true;
     base.progress.introSeen = raw.progress.introSeen === true;
   }
+  base.settings = sanitizeSettings(isObj(raw) ? raw.settings : undefined, prefersReducedMotion);
   return base;
 }
 
 /** Load current save; if none, import legacy v1 keys (achievements + explored sites). */
-export function loadSave(storage: StorageLike): SaveGame {
+export function loadSave(storage: StorageLike, prefersReducedMotion = false): SaveGame {
   const current = safeParse(storage.getItem(SAVE_KEY));
-  if (current) return migrateSave(current);
+  if (current) return migrateSave(current, prefersReducedMotion);
 
-  const save = createNewSave();
+  const save = createNewSave(prefersReducedMotion);
   const legacyAch = safeParse(storage.getItem(LEGACY_ACHIEVEMENTS_KEY));
   if (Array.isArray(legacyAch)) {
     for (const a of legacyAch) {
@@ -102,5 +106,30 @@ export function writeSave(storage: StorageLike, save: SaveGame): boolean {
     return true;
   } catch {
     return false; // quota / private mode: game keeps running in memory
+  }
+}
+
+/**
+ * Resolve a usable storage. Accessing window.localStorage can THROW (blocked cookies, some
+ * private modes) and writes can fail (quota). In those cases fall back to an in-memory store
+ * so the game still runs, and report `persistent: false` so the UI can warn the player.
+ */
+export function resolveStorage(getter: () => StorageLike): { storage: StorageLike; persistent: boolean } {
+  try {
+    const s = getter();
+    const probe = '__buildscapes_probe__';
+    s.setItem(probe, '1');
+    s.removeItem?.(probe);
+    return { storage: s, persistent: true };
+  } catch {
+    const mem = new Map<string, string>();
+    return {
+      storage: {
+        getItem: (k) => mem.get(k) ?? null,
+        setItem: (k, v) => { mem.set(k, v); },
+        removeItem: (k) => { mem.delete(k); },
+      },
+      persistent: false,
+    };
   }
 }

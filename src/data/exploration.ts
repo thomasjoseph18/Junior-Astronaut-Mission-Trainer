@@ -1,4 +1,4 @@
-import { ExplorationPoint } from '../types';
+import type { ExplorationPoint } from '../types.ts';
 
 export const EXPLORATION_POINTS: ExplorationPoint[] = [
   // ================= MOON EXPLORATION SITES =================

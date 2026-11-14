@@ -246,3 +246,13 @@
   border: 1.5px solid rgba(251, 146, 60, 0.35);
   box-shadow: 0 20px 60px rgba(60, 15, 5, 0.6), inset 0 1px 0 rgba(251, 146, 60, 0.1);
 }
+
+/* Reduced-motion setting (also auto-enabled from the OS preference on first run). */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

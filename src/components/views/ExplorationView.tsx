@@ -23,7 +23,9 @@ import { EXPLORATION_POINTS } from '../../data/exploration';
 interface ExplorationViewProps {
   destination: Destination;
   onSelectDestination?: (dest: Destination) => void;
-  onUnlockAchievement?: (id: string) => void;
+  /** Sites the player has VIEWED (informational only; viewing never unlocks achievements). */
+  exploredIds: string[];
+  onSiteViewed: (siteId: string) => void;
   onNavigateToHabitat?: () => void;
   onNavigateToPOV?: () => void;
 }
@@ -31,20 +33,12 @@ interface ExplorationViewProps {
 export const ExplorationView: React.FC<ExplorationViewProps> = ({
   destination,
   onSelectDestination,
-  onUnlockAchievement,
+  exploredIds,
+  onSiteViewed,
   onNavigateToHabitat,
   onNavigateToPOV,
 }) => {
   const [activeDest, setActiveDest] = useState<Destination>(destination);
-  const [exploredIds, setExploredIds] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('buildscapes_explored_sites');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
   const sites = EXPLORATION_POINTS.filter((p) => p.destination === activeDest);
   const [selectedSiteId, setSelectedSiteId] = useState<string>(sites[0]?.id || '');
 
@@ -52,22 +46,7 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
 
   const handleInspectSite = (site: ExplorationPoint) => {
     setSelectedSiteId(site.id);
-    if (!exploredIds.includes(site.id)) {
-      const nextExplored = [...exploredIds, site.id];
-      setExploredIds(nextExplored);
-      try {
-        localStorage.setItem('buildscapes_explored_sites', JSON.stringify(nextExplored));
-      } catch {
-        // ignore
-      }
-
-      // If all sites for this destination are explored, unlock planetary geologist badge!
-      const currentDestSites = EXPLORATION_POINTS.filter((p) => p.destination === activeDest);
-      const allExplored = currentDestSites.every((s) => nextExplored.includes(s.id));
-      if (allExplored && onUnlockAchievement) {
-        onUnlockAchievement('planetary_geologist');
-      }
-    }
+    onSiteViewed(site.id);
   };
 
   const renderIcon = (iconName: string) => {

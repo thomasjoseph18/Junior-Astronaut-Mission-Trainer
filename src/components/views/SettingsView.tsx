@@ -9,6 +9,9 @@ import {
   User,
   ShieldCheck,
   CheckCircle2,
+  Accessibility,
+  Captions,
+  Rocket,
 } from 'lucide-react';
 import { SettingsConfig } from '../../types';
 
@@ -178,6 +181,87 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
         </div>
 
+
+        {/* Reduced motion */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-slate-800/80">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
+              <Accessibility className="w-4 h-4 text-cyan-400" />
+              <span>REDUCED MOTION</span>
+            </div>
+            <p className="text-xs text-slate-400">Calms camera movement and non-essential animation. Starts on automatically if your device asks for it.</p>
+          </div>
+          <button
+            role="switch"
+            aria-checked={settings.reducedMotion}
+            onClick={() => onUpdateSettings({ reducedMotion: !settings.reducedMotion })}
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${settings.reducedMotion ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'}`}
+          >
+            {settings.reducedMotion ? 'REDUCED MOTION: ON' : 'REDUCED MOTION: OFF'}
+          </button>
+        </div>
+
+        {/* Captions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-slate-800/80">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
+              <Captions className="w-4 h-4 text-cyan-400" />
+              <span>CAPTIONS</span>
+            </div>
+            <p className="text-xs text-slate-400">Show text for radio chatter, N.O.V.A. and story scenes.</p>
+          </div>
+          <button
+            role="switch"
+            aria-checked={settings.captionsEnabled}
+            onClick={() => onUpdateSettings({ captionsEnabled: !settings.captionsEnabled })}
+            className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${settings.captionsEnabled ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'}`}
+          >
+            {settings.captionsEnabled ? 'CAPTIONS: ON' : 'CAPTIONS: OFF'}
+          </button>
+        </div>
+
+        {/* Master volume */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-slate-800/80">
+          <label htmlFor="master-volume" className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
+              <Volume2 className="w-4 h-4 text-cyan-400" />
+              <span>MASTER VOLUME ({Math.round(settings.masterVolume * 100)}%)</span>
+            </div>
+            <p className="text-xs text-slate-400">Applies to the game audio coming in later phases.</p>
+          </label>
+          <input
+            id="master-volume"
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(settings.masterVolume * 100)}
+            onChange={(e) => onUpdateSettings({ masterVolume: Number(e.target.value) / 100 })}
+            className="w-full sm:w-56 accent-cyan-400"
+          />
+        </div>
+
+        {/* Experience mode (temporary classic switch) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-slate-800/80">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-slate-200">
+              <Rocket className="w-4 h-4 text-cyan-400" />
+              <span>EXPERIENCE MODE</span>
+            </div>
+            <p className="text-xs text-slate-400">Classic is the original dashboard. Game is the new first-person experience (still being built). Your saved progress is shared by both.</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            {(['classic', 'game'] as const).map((m) => (
+              <button
+                key={m}
+                aria-pressed={settings.uiMode === m}
+                onClick={() => onUpdateSettings({ uiMode: m })}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${settings.uiMode === m ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}`}
+              >
+                {m === 'classic' ? 'Classic Mode' : 'Game Mode (preview)'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Safety & Educational Privacy Badge */}

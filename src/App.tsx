@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Navbar } from './components/Navbar';
 import { MissionStatusRibbon } from './components/MissionStatusRibbon';
@@ -15,22 +15,31 @@ import { LunarPOVScene } from './components/lunar-pov/LunarPOVScene';
 import { MarsSurfaceScene } from './components/mars-pov/MarsSurfaceScene';
 import { POVHud } from './components/lunar-pov/POVHud';
 import { MissionDebriefScreen } from './components/MissionDebriefScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { GameShell } from './components/GameShell';
+import { StaticBackdrop, WebGLFallback } from './components/WebGLFallback';
 import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry, Achievement, ExplorationPoint } from './types';
 import { getInitialJournal } from './data/missions';
 import { INITIAL_ACHIEVEMENTS } from './data/achievements';
 import { useHabitatSimulation } from './hooks/useHabitatSimulation';
 import type { SimulationMap } from './hooks/useHabitatSimulation';
-import { evaluateAchievements } from './engine/achievements';
 import type { GameEvent } from './engine/achievements';
-import { loadSave, writeSave } from './engine/save';
+import { loadSave, resolveStorage, writeSave } from './engine/save';
 import type { SaveGame } from './engine/save';
+import { applyGameEvent, markSiteViewed } from './engine/progress';
+import { gameReducer, initialGameState } from './engine/gameState';
+import { detectWebGL } from './engine/webgl';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
   const [destination, setDestination] = useState<Destination>('moon');
   // Versioned save: both destinations' simulations, journals, achievements.
+  const [{ storage, persistent }] = useState(() => resolveStorage(() => window.localStorage));
+  const [saveOk, setSaveOk] = useState(true);
   const [save, setSave] = useState<SaveGame>(() => {
-    const loaded = loadSave(window.localStorage);
+    const prefersReduced =
+      typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const loaded = loadSave(storage, prefersReduced);
     for (const d of ['moon', 'mars'] as Destination[]) {
       if (loaded.journals[d].length === 0) loaded.journals[d] = getInitialJournal(d);
     }
@@ -38,20 +47,25 @@ export function App() {
   });
 
   useEffect(() => {
-    writeSave(window.localStorage, save);
-  }, [save]);
+    setSaveOk(writeSave(storage, save));
+  }, [save, storage]);
+
+  const saveWarning = !persistent || !saveOk;
 
   // Phase 3 — Lunar POV state
   const [povPointerLocked, setPovPointerLocked] = useState(false);
   const [povSelectedPoint, setPovSelectedPoint] = useState<ExplorationPoint | null>(null);
 
-  const [settings, setSettings] = useState<SettingsConfig>({
-    callSign: 'Cadet Commander',
-    audioEnabled: true,
-    novaVoiceEnabled: true,
-    textSize: 'normal',
-    lowPerformanceMode: false,
-  });
+  // Settings live inside the versioned save, so they persist across reloads.
+  const settings = save.settings;
+  const handleUpdateSettings = useCallback((patch: Partial<SettingsConfig>) => {
+    setSave((prev) => {
+      const merged = { ...prev.settings, ...patch };
+      if (typeof patch.masterVolume === 'number') merged.masterVolume = Math.min(1, Math.max(0, patch.masterVolume));
+      if (typeof patch.callSign === 'string') merged.callSign = patch.callSign.slice(0, 24);
+      return { ...prev, settings: merged };
+    });
+  }, []);
 
   // Achievements are derived from the save and only change through real game events.
   const achievements: Achievement[] = useMemo(
@@ -64,15 +78,11 @@ export function App() {
   );
 
   const handleGameEvent = useCallback((event: GameEvent) => {
-    const unlocks = evaluateAchievements(event);
-    if (unlocks.length === 0) return;
-    setSave((prev) => {
-      const next = { ...prev, achievements: { ...prev.achievements } };
-      for (const u of unlocks) {
-        if (!next.achievements[u.id]) next.achievements[u.id] = u.sol !== undefined ? { unlockedAtSol: u.sol } : {};
-      }
-      return next;
-    });
+    setSave((prev) => applyGameEvent(prev, event));
+  }, []);
+
+  const handleSiteViewed = useCallback((siteId: string) => {
+    setSave((prev) => markSiteViewed(prev, siteId));
   }, []);
 
   const handleDailyJournalEntry = useCallback((entry: JournalEntry, dest: Destination) => {
@@ -102,13 +112,7 @@ export function App() {
     handleGameEvent({ type: 'mission_started', destination });
   }, [destination, handleGameEvent]);
 
-  const handleUpdateSettings = (newSettings: Partial<SettingsConfig>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
-  };
-
-  const handleToggleAudio = () => {
-    setSettings((prev) => ({ ...prev, audioEnabled: !prev.audioEnabled }));
-  };
+  const handleToggleAudio = () => handleUpdateSettings({ audioEnabled: !settings.audioEnabled });
 
   const handleAddCustomJournalEntry = (newEntry: JournalEntry) => {
     setSave((prev) => ({
@@ -128,6 +132,28 @@ export function App() {
     setSave((prev) => ({ ...prev, journals: { ...prev.journals, [destination]: getInitialJournal(destination) } }));
   }, [simulation, destination]);
 
+  // ---- Game state machine (first-person shell) ----
+  const [game, dispatchGame] = useReducer(gameReducer, undefined, initialGameState);
+
+  useEffect(() => {
+    dispatchGame({ type: 'BOOT_DONE', introSeen: save.progress.introSeen, uiMode: save.settings.uiMode });
+    // boot runs once, from the loaded save
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // The Experience Mode setting drives the classic <-> game switch after boot.
+  useEffect(() => {
+    if (game.screen === 'boot') return;
+    if (settings.uiMode === 'classic' && game.screen !== 'classic') dispatchGame({ type: 'ENTER_CLASSIC' });
+    if (settings.uiMode === 'game' && game.screen === 'classic') dispatchGame({ type: 'EXIT_CLASSIC' });
+  }, [settings.uiMode, game.screen]);
+
+  // ---- WebGL capability ----
+  const [webgl] = useState(() => detectWebGL(() => document.createElement('canvas')));
+  const [forceWebGL, setForceWebGL] = useState(false);
+  const [contextLost, setContextLost] = useState(false);
+  const canRender3D = (webgl.supported || forceWebGL) && !contextLost;
+
   // Live Telemetry mapping for top status ribbon
   const currentTelemetry: SolTelemetry = {
     currentSol: simulation.state.currentSol,
@@ -140,38 +166,88 @@ export function App() {
     statusMessage: simulation.state.lastDebriefMessage,
   };
 
+  if (game.screen === 'boot') {
+    return <div role="status" className="min-h-screen bg-[#020617] text-slate-300 flex items-center justify-center text-sm font-mono">Loading mission data…</div>;
+  }
+
+  if (game.screen !== 'classic') {
+    return (
+      <GameShell
+        saveWarning={saveWarning}
+        state={game}
+        dispatch={dispatchGame}
+        unlocks={save.progress}
+        reducedMotion={settings.reducedMotion}
+        onUseClassic={() => handleUpdateSettings({ uiMode: 'classic' })}
+      />
+    );
+  }
+
+  const inPov = currentTab === 'lunar-pov' || currentTab === 'mars-pov';
+
   return (
     <div
       className={`relative w-screen h-screen overflow-hidden bg-[#020617] font-sans text-slate-100 flex flex-col scanlines ${
         settings.textSize === 'large' ? 'text-base sm:text-lg' : 'text-sm'
-      }`}
+      } ${settings.reducedMotion ? 'reduce-motion' : ''}`}
     >
+      {saveWarning && (
+        <div role="status" className="fixed top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-amber-900/90 border border-amber-500/60 text-amber-100 text-xs font-mono">
+          Progress can’t be saved on this device right now. You can keep playing, but it will be lost when you close the page.
+        </div>
+      )}
       {/* 3D Background Canvas — switches between orbital, Lunar POV, and Mars POV */}
       <div className="absolute inset-0 z-0">
-        <Canvas
-          camera={{ position: [0, 0, 5.8], fov: 45 }}
-          dpr={settings.lowPerformanceMode ? 1 : [1, 2]}
-        >
-          {currentTab === 'lunar-pov' ? (
-            <LunarPOVScene
-              lowPerformanceMode={settings.lowPerformanceMode}
-              onPointSelected={setPovSelectedPoint}
-              onPointerLockChange={setPovPointerLocked}
-            />
-          ) : currentTab === 'mars-pov' ? (
-            <MarsSurfaceScene
-              lowPerformanceMode={settings.lowPerformanceMode}
-              onPointSelected={setPovSelectedPoint}
-              onPointerLockChange={setPovPointerLocked}
-            />
-          ) : (
-            <TestScene destination={destination} />
-          )}
-        </Canvas>
+        {canRender3D ? (
+          <ErrorBoundary resetKey={`${currentTab}:${destination}`} fallback={() => <StaticBackdrop />}>
+            <Canvas
+              camera={{ position: [0, 0, 5.8], fov: 45 }}
+              dpr={settings.lowPerformanceMode ? 1 : [1, 2]}
+              onCreated={({ gl }) => {
+                gl.domElement.addEventListener('webglcontextlost', (e) => {
+                  e.preventDefault();
+                  setContextLost(true);
+                });
+              }}
+            >
+              {currentTab === 'lunar-pov' ? (
+                <LunarPOVScene
+                  lowPerformanceMode={settings.lowPerformanceMode}
+                  onPointSelected={setPovSelectedPoint}
+                  onPointerLockChange={setPovPointerLocked}
+                />
+              ) : currentTab === 'mars-pov' ? (
+                <MarsSurfaceScene
+                  lowPerformanceMode={settings.lowPerformanceMode}
+                  onPointSelected={setPovSelectedPoint}
+                  onPointerLockChange={setPovPointerLocked}
+                />
+              ) : (
+                <TestScene destination={destination} />
+              )}
+            </Canvas>
+          </ErrorBoundary>
+        ) : (
+          <StaticBackdrop />
+        )}
       </div>
 
+      {/* No usable 3D: explain instead of showing a dead screen. */}
+      {inPov && !canRender3D && (
+        <WebGLFallback
+          support={webgl}
+          contextLost={contextLost}
+          onTryAnyway={webgl.reason === 'major_performance_caveat' ? () => setForceWebGL(true) : undefined}
+          onExit={() => {
+            setPovPointerLocked(false);
+            setPovSelectedPoint(null);
+            setCurrentTab('exploration');
+          }}
+        />
+      )}
+
       {/* POV HUD — full-screen overlay, shown in both lunar-pov and mars-pov modes */}
-      {(currentTab === 'lunar-pov' || currentTab === 'mars-pov') && (
+      {inPov && canRender3D && (
         <POVHud
           destination={currentTab === 'mars-pov' ? 'mars' : 'moon'}
           onExit={() => {
@@ -255,7 +331,9 @@ export function App() {
               <ExplorationView
                 destination={destination}
                 onSelectDestination={handleSelectDestination}
-                  onNavigateToHabitat={() => setCurrentTab('habitat')}
+                exploredIds={save.viewedSites}
+                onSiteViewed={handleSiteViewed}
+                onNavigateToHabitat={() => setCurrentTab('habitat')}
                 onNavigateToPOV={() => setCurrentTab(destination === 'mars' ? 'mars-pov' : 'lunar-pov')}
               />
             )}
