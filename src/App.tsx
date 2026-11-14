@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Navbar } from './components/Navbar';
 import { MissionStatusRibbon } from './components/MissionStatusRibbon';
@@ -19,11 +19,27 @@ import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry, Achiev
 import { getInitialJournal } from './data/missions';
 import { INITIAL_ACHIEVEMENTS } from './data/achievements';
 import { useHabitatSimulation } from './hooks/useHabitatSimulation';
+import type { SimulationMap } from './hooks/useHabitatSimulation';
+import { evaluateAchievements } from './engine/achievements';
+import type { GameEvent } from './engine/achievements';
+import { loadSave, writeSave } from './engine/save';
+import type { SaveGame } from './engine/save';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
   const [destination, setDestination] = useState<Destination>('moon');
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => getInitialJournal('moon'));
+  // Versioned save: both destinations' simulations, journals, achievements.
+  const [save, setSave] = useState<SaveGame>(() => {
+    const loaded = loadSave(window.localStorage);
+    for (const d of ['moon', 'mars'] as Destination[]) {
+      if (loaded.journals[d].length === 0) loaded.journals[d] = getInitialJournal(d);
+    }
+    return loaded;
+  });
+
+  useEffect(() => {
+    writeSave(window.localStorage, save);
+  }, [save]);
 
   // Phase 3 — Lunar POV state
   const [povPointerLocked, setPovPointerLocked] = useState(false);
@@ -37,56 +53,54 @@ export function App() {
     lowPerformanceMode: false,
   });
 
-  // Track player merits & badges
-  const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    try {
-      const saved = localStorage.getItem('buildscapes_achievements');
-      if (saved) {
-        const parsed: Achievement[] = JSON.parse(saved);
-        return INITIAL_ACHIEVEMENTS.map((init) => {
-          const match = parsed.find((p) => p.id === init.id);
-          return match
-            ? { ...init, unlocked: match.unlocked, unlockedAtSol: match.unlockedAtSol }
-            : init;
-        });
-      }
-    } catch {
-      // ignore
-    }
-    return INITIAL_ACHIEVEMENTS;
-  });
+  // Achievements are derived from the save and only change through real game events.
+  const achievements: Achievement[] = useMemo(
+    () =>
+      INITIAL_ACHIEVEMENTS.map((init) => {
+        const got = save.achievements[init.id];
+        return got ? { ...init, unlocked: true, unlockedAtSol: got.unlockedAtSol ?? init.unlockedAtSol } : { ...init, unlocked: false };
+      }),
+    [save.achievements],
+  );
 
-  // Callback to unlock an achievement with persistence and deduplication
-  const handleUnlockAchievement = useCallback((id: string, atSol?: number) => {
-    setAchievements((prev) => {
-      const match = prev.find((a) => a.id === id);
-      if (match && match.unlocked) return prev;
-      const next = prev.map((a) =>
-        a.id === id
-          ? { ...a, unlocked: true, unlockedAtSol: atSol || a.unlockedAtSol || 1 }
-          : a
-      );
-      try {
-        localStorage.setItem('buildscapes_achievements', JSON.stringify(next));
-      } catch {
-        // ignore
+  const handleGameEvent = useCallback((event: GameEvent) => {
+    const unlocks = evaluateAchievements(event);
+    if (unlocks.length === 0) return;
+    setSave((prev) => {
+      const next = { ...prev, achievements: { ...prev.achievements } };
+      for (const u of unlocks) {
+        if (!next.achievements[u.id]) next.achievements[u.id] = u.sol !== undefined ? { unlockedAtSol: u.sol } : {};
       }
       return next;
     });
   }, []);
 
-  // Callback when simulation triggers a daily journal entry (guarantees zero duplicate entries)
-  const handleDailyJournalEntry = useCallback((entry: JournalEntry) => {
-    setJournalEntries((prev) => {
-      if (prev.some((e) => e.id === entry.id || (e.sol === entry.sol && e.title === entry.title))) {
-        return prev;
-      }
-      return [entry, ...prev];
+  const handleDailyJournalEntry = useCallback((entry: JournalEntry, dest: Destination) => {
+    setSave((prev) => {
+      const list = prev.journals[dest];
+      if (list.some((e) => e.id === entry.id || (e.sol === entry.sol && e.title === entry.title))) return prev;
+      return { ...prev, journals: { ...prev.journals, [dest]: [entry, ...list] } };
     });
   }, []);
 
-  // Initialize Habitat 30-Sol Resource Simulation Engine
-  const simulation = useHabitatSimulation(destination, handleDailyJournalEntry, handleUnlockAchievement);
+  const handleSimulationsChange = useCallback((sims: SimulationMap) => {
+    setSave((prev) => ({ ...prev, simulations: sims }));
+  }, []);
+
+  const [initialSims] = useState<SimulationMap>(() => save.simulations);
+  const simulation = useHabitatSimulation(destination, {
+    initialSimulations: initialSims,
+    onSimulationsChange: handleSimulationsChange,
+    onJournalAdd: handleDailyJournalEntry,
+    onGameEvent: handleGameEvent,
+  });
+
+  const journalEntries = save.journals[destination];
+
+  // Starting a destination for the first time is a real event (first_touchdown).
+  useEffect(() => {
+    handleGameEvent({ type: 'mission_started', destination });
+  }, [destination, handleGameEvent]);
 
   const handleUpdateSettings = (newSettings: Partial<SettingsConfig>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -97,20 +111,21 @@ export function App() {
   };
 
   const handleAddCustomJournalEntry = (newEntry: JournalEntry) => {
-    setJournalEntries((prev) => [newEntry, ...prev]);
+    setSave((prev) => ({
+      ...prev,
+      journals: { ...prev.journals, [destination]: [newEntry, ...prev.journals[destination]] },
+    }));
   };
 
-  // Bug 1 Fix: Fresh simulation and destination-specific journal when destination switches
+  // Switching destination keeps BOTH simulations and journals intact.
   const handleSelectDestination = useCallback((newDest: Destination) => {
-    if (newDest !== destination) {
-      setDestination(newDest);
-      setJournalEntries(getInitialJournal(newDest));
-    }
+    if (newDest !== destination) setDestination(newDest);
   }, [destination]);
 
+  // Restart only the active destination (its simulation and its auto-logged journal).
   const handleResetSimulation = useCallback(() => {
     simulation.resetSimulation();
-    setJournalEntries(getInitialJournal(destination));
+    setSave((prev) => ({ ...prev, journals: { ...prev.journals, [destination]: getInitialJournal(destination) } }));
   }, [simulation, destination]);
 
   // Live Telemetry mapping for top status ribbon
@@ -140,14 +155,12 @@ export function App() {
           {currentTab === 'lunar-pov' ? (
             <LunarPOVScene
               lowPerformanceMode={settings.lowPerformanceMode}
-              onUnlockAchievement={handleUnlockAchievement}
               onPointSelected={setPovSelectedPoint}
               onPointerLockChange={setPovPointerLocked}
             />
           ) : currentTab === 'mars-pov' ? (
             <MarsSurfaceScene
               lowPerformanceMode={settings.lowPerformanceMode}
-              onUnlockAchievement={handleUnlockAchievement}
               onPointSelected={setPovSelectedPoint}
               onPointerLockChange={setPovPointerLocked}
             />
@@ -242,8 +255,7 @@ export function App() {
               <ExplorationView
                 destination={destination}
                 onSelectDestination={handleSelectDestination}
-                onUnlockAchievement={handleUnlockAchievement}
-                onNavigateToHabitat={() => setCurrentTab('habitat')}
+                  onNavigateToHabitat={() => setCurrentTab('habitat')}
                 onNavigateToPOV={() => setCurrentTab(destination === 'mars' ? 'mars-pov' : 'lunar-pov')}
               />
             )}

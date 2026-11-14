@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types tests/engine.test.ts",
+    "test:legacy": "node scripts/test_simulation_engine.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
