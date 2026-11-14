@@ -25,9 +25,14 @@ export function App() {
     lowPerformanceMode: false,
   });
 
-  // Callback when simulation triggers a daily journal entry
+  // Callback when simulation triggers a daily journal entry (guarantees zero duplicate entries)
   const handleDailyJournalEntry = useCallback((entry: JournalEntry) => {
-    setJournalEntries((prev) => [entry, ...prev]);
+    setJournalEntries((prev) => {
+      if (prev.some((e) => e.id === entry.id || (e.sol === entry.sol && e.title === entry.title))) {
+        return prev;
+      }
+      return [entry, ...prev];
+    });
   }, []);
 
   // Initialize Habitat 30-Sol Resource Simulation Engine
@@ -44,6 +49,11 @@ export function App() {
   const handleAddCustomJournalEntry = (newEntry: JournalEntry) => {
     setJournalEntries((prev) => [newEntry, ...prev]);
   };
+
+  const handleResetSimulation = useCallback(() => {
+    simulation.resetSimulation();
+    setJournalEntries(INITIAL_JOURNAL);
+  }, [simulation]);
 
   // Live Telemetry mapping for top status ribbon
   const currentTelemetry: SolTelemetry = {
@@ -96,7 +106,10 @@ export function App() {
             <WelcomeView
               onNavigate={setCurrentTab}
               destination={destination}
-              simulation={simulation}
+              simulation={{
+                ...simulation,
+                resetSimulation: handleResetSimulation,
+              }}
             />
           )}
 

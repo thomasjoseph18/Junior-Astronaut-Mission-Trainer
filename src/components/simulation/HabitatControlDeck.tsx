@@ -11,10 +11,10 @@ import {
   Brush,
   Flame,
   ShieldCheck,
-  Thermometer,
   Radio,
   FlaskConical,
   Award,
+  Thermometer,
 } from 'lucide-react';
 import {
   Destination,
@@ -64,6 +64,8 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
   const isMars = destination === 'mars';
 
   const isSol30 = state.currentSol >= state.totalSols;
+  const isMissionCritical = state.missionStatus === 'critical';
+  const isMissionVictory = state.missionStatus === 'victory' || isSol30;
 
   return (
     <div className="space-y-6">
@@ -80,17 +82,17 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                 <span>EXPEDITION SOL {state.currentSol} OF {state.totalSols}</span>
               </span>
 
-              {state.missionStatus === 'victory' && (
+              {isMissionVictory && (
                 <span className="px-3 py-1 rounded-full bg-emerald-950 border border-emerald-400 text-emerald-300 font-mono text-xs font-bold flex items-center gap-1">
                   <Award className="w-4 h-4 text-emerald-400" />
                   <span>30-SOL VICTORY ACHIEVED!</span>
                 </span>
               )}
 
-              {state.missionStatus === 'critical' && (
-                <span className="px-3 py-1 rounded-full bg-red-950 border border-red-500 text-red-300 font-mono text-xs font-bold flex items-center gap-1">
+              {isMissionCritical && (
+                <span className="px-3 py-1 rounded-full bg-red-950 border border-red-500 text-red-300 font-mono text-xs font-bold flex items-center gap-1 animate-pulse">
                   <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span>CRITICAL ALERT: LIFE SUPPORT LOW</span>
+                  <span>CRITICAL ALERT: MISSION HALTED</span>
                 </span>
               )}
 
@@ -113,9 +115,26 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
             </div>
           </div>
 
-          {/* Sol Advancement Buttons */}
+          {/* Sol Advancement & Mission-State Protection Controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {!isSol30 ? (
+            {/* 1. Critical Failure State */}
+            {isMissionCritical && (
+              <div className="px-5 py-3 rounded-2xl bg-red-950/80 border border-red-500 text-red-200 font-bold text-xs sm:text-sm flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <span>Mission Failed: Reset required to continue</span>
+              </div>
+            )}
+
+            {/* 2. Victory State */}
+            {isMissionVictory && !isMissionCritical && (
+              <div className="px-5 py-3 rounded-2xl bg-emerald-600/30 border border-emerald-400 text-emerald-200 font-bold text-xs sm:text-sm flex items-center space-x-2">
+                <Award className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Mission Completed! 30 Sols Survived!</span>
+              </div>
+            )}
+
+            {/* 3. Active Mission Advancement Button */}
+            {!isMissionCritical && !isMissionVictory && (
               <button
                 onClick={onAdvanceSol}
                 className="px-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-sm sm:text-base shadow-xl shadow-cyan-900/50 border border-cyan-300/40 flex items-center justify-center space-x-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer"
@@ -123,19 +142,20 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                 <span>Execute Sol {state.currentSol} Operations</span>
                 <ChevronRight className="w-5 h-5 text-cyan-200" />
               </button>
-            ) : (
-              <div className="px-5 py-3 rounded-2xl bg-emerald-600/30 border border-emerald-400 text-emerald-200 font-bold text-sm text-center">
-                Mission Completed! You survived 30 Sols!
-              </div>
             )}
 
+            {/* Reset Button (Always available, highlighted if critical) */}
             <button
               onClick={onResetSimulation}
               title="Reset Habitat to Sol 1"
-              className="px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 text-xs font-mono flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+              className={`px-4 py-3 rounded-2xl text-xs font-mono flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+                isMissionCritical
+                  ? 'bg-red-600 hover:bg-red-500 text-white font-bold shadow-lg shadow-red-900/50 border border-red-400 animate-pulse'
+                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700'
+              }`}
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset</span>
+              <span>{isMissionCritical ? 'Reset Mission' : 'Reset'}</span>
             </button>
           </div>
 
@@ -150,12 +170,31 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
           </div>
           <div className="w-full h-3 rounded-full bg-slate-950 border border-slate-800 overflow-hidden p-0.5">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 transition-all duration-500 shadow-sm shadow-cyan-400"
+              className={`h-full rounded-full transition-all duration-500 ${
+                isMissionCritical
+                  ? 'bg-red-500'
+                  : isMissionVictory
+                  ? 'bg-emerald-400 shadow-sm shadow-emerald-400'
+                  : 'bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 shadow-sm shadow-cyan-400'
+              }`}
               style={{ width: `${(state.currentSol / state.totalSols) * 100}%` }}
             />
           </div>
         </div>
       </div>
+
+      {/* Critical Alert Warning Card (if mission failed) */}
+      {isMissionCritical && (
+        <div className="p-5 rounded-2xl border-2 border-red-500 bg-red-950/70 backdrop-blur-xl text-red-200 space-y-2 shadow-2xl animate-fadeIn">
+          <div className="flex items-center space-x-2 text-sm font-bold text-red-300">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <span>MISSION FAILED: Life Support Exhaustion or Hull Failure</span>
+          </div>
+          <p className="text-xs text-red-200/90 leading-relaxed">
+            One or more vital habitat parameters dropped below survivable safety thresholds (Oxygen &le; 5%, Water &le; 5%, or Structural Integrity &le; 10%). Sol advancement has been locked to protect crew safety telemetry. Click the pulsing <strong>Reset Mission</strong> button above to re-initialize your habitat systems.
+          </p>
+        </div>
+      )}
 
       {/* Primary Subsystem Selector Tabs */}
       <div className="grid grid-cols-3 gap-3">
@@ -263,17 +302,17 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                 <p className="text-xs text-slate-300 mt-1">
                   {isMars
                     ? 'Using MOXIE solid-oxide electrolysis to split Martian CO₂ into breathable Oxygen.'
-                    : 'Using water electrolysis and lunar regolith minerals to sustain 21% O₂ partial pressure.'}
+                    : 'Using water electrolysis and lunar regolith mineral extraction to sustain 21% O₂ partial pressure.'}
                 </p>
               </div>
 
               {/* Emergency Canister Action */}
               <button
                 onClick={onUseEmergencyO2}
-                disabled={state.emergencyO2Canisters <= 0}
+                disabled={state.emergencyO2Canisters <= 0 || isMissionCritical}
                 className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 transition-all ${
-                  state.emergencyO2Canisters > 0
-                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md shadow-cyan-600/30'
+                  state.emergencyO2Canisters > 0 && !isMissionCritical
+                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md shadow-cyan-600/30 cursor-pointer'
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                 }`}
               >
@@ -311,8 +350,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Eco Mode */}
                 <div
-                  onClick={() => onSetO2Mode('eco')}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all ${
+                  onClick={() => !isMissionCritical && onSetO2Mode('eco')}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.o2Mode === 'eco'
                       ? 'border-cyan-400 bg-cyan-950/50 shadow-md'
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
@@ -330,8 +371,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Standard Mode */}
                 <div
-                  onClick={() => onSetO2Mode('standard')}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all ${
+                  onClick={() => !isMissionCritical && onSetO2Mode('standard')}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.o2Mode === 'standard'
                       ? 'border-cyan-400 bg-cyan-950/50 shadow-md'
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
@@ -349,8 +392,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Boost Mode */}
                 <div
-                  onClick={() => onSetO2Mode('boost')}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all ${
+                  onClick={() => !isMissionCritical && onSetO2Mode('boost')}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.o2Mode === 'boost'
                       ? 'border-cyan-400 bg-cyan-950/50 shadow-md'
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
@@ -399,7 +444,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
               {/* Subsurface Ice Smelter Toggle */}
               <button
                 onClick={onToggleIceSmelting}
+                disabled={isMissionCritical}
                 className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 transition-all ${
+                  isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                } ${
                   state.iceSmeltingActive
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30'
                     : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
@@ -439,8 +487,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Basic Recycler */}
                 <div
-                  onClick={() => onSetWaterRecyclerMode('basic')}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all ${
+                  onClick={() => !isMissionCritical && onSetWaterRecyclerMode('basic')}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.waterRecyclerMode === 'basic'
                       ? 'border-blue-400 bg-blue-950/50 shadow-md'
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
@@ -458,8 +508,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Advanced Recycler */}
                 <div
-                  onClick={() => onSetWaterRecyclerMode('advanced')}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all ${
+                  onClick={() => !isMissionCritical && onSetWaterRecyclerMode('advanced')}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.waterRecyclerMode === 'advanced'
                       ? 'border-blue-400 bg-blue-950/50 shadow-md'
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
@@ -477,8 +529,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Hyper Filtration */}
                 <div
-                  onClick={() => onSetWaterRecyclerMode('hyper')}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all ${
+                  onClick={() => !isMissionCritical && onSetWaterRecyclerMode('hyper')}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.waterRecyclerMode === 'hyper'
                       ? 'border-blue-400 bg-blue-950/50 shadow-md'
                       : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
@@ -506,8 +560,11 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                 {(['strict', 'standard', 'generous'] as WaterRation[]).map((ration) => (
                   <button
                     key={ration}
-                    onClick={() => onSetWaterRation(ration)}
+                    onClick={() => !isMissionCritical && onSetWaterRation(ration)}
+                    disabled={isMissionCritical}
                     className={`px-4 py-2 rounded-xl text-xs font-mono font-bold capitalize transition-colors ${
+                      isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                    } ${
                       state.waterRation === ration
                         ? 'bg-blue-600 text-white'
                         : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
@@ -541,7 +598,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
               {/* Clean Solar Dust Action */}
               <button
                 onClick={onCleanSolarPanels}
-                className="px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-600/30 transition-all"
+                disabled={isMissionCritical}
+                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-600/30 transition-all ${
+                  isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                }`}
               >
                 <Brush className="w-3.5 h-3.5" />
                 <span>Clean Solar Dust Wipers ({state.solarDustAccumulation}% dust)</span>
@@ -611,8 +671,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                 
                 {/* O2 switch */}
                 <div
-                  onClick={() => onTogglePowerAllocation('lifeSupportO2')}
-                  className={`cursor-pointer p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                  onClick={() => !isMissionCritical && onTogglePowerAllocation('lifeSupportO2')}
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.powerAllocation.lifeSupportO2
                       ? 'bg-blue-950/60 border-cyan-500 text-white'
                       : 'bg-slate-950 border-slate-800 text-slate-500'
@@ -629,8 +691,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Water Recycling switch */}
                 <div
-                  onClick={() => onTogglePowerAllocation('waterRecycling')}
-                  className={`cursor-pointer p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                  onClick={() => !isMissionCritical && onTogglePowerAllocation('waterRecycling')}
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.powerAllocation.waterRecycling
                       ? 'bg-blue-950/60 border-blue-500 text-white'
                       : 'bg-slate-950 border-slate-800 text-slate-500'
@@ -647,8 +711,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Thermal Heating switch */}
                 <div
-                  onClick={() => onTogglePowerAllocation('thermalRegulation')}
-                  className={`cursor-pointer p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                  onClick={() => !isMissionCritical && onTogglePowerAllocation('thermalRegulation')}
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.powerAllocation.thermalRegulation
                       ? 'bg-blue-950/60 border-amber-500 text-white'
                       : 'bg-slate-950 border-slate-800 text-slate-500'
@@ -665,8 +731,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Science Lab switch */}
                 <div
-                  onClick={() => onTogglePowerAllocation('scienceLab')}
-                  className={`cursor-pointer p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                  onClick={() => !isMissionCritical && onTogglePowerAllocation('scienceLab')}
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.powerAllocation.scienceLab
                       ? 'bg-blue-950/60 border-purple-500 text-white'
                       : 'bg-slate-950 border-slate-800 text-slate-500'
@@ -683,8 +751,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
 
                 {/* Comms switch */}
                 <div
-                  onClick={() => onTogglePowerAllocation('communications')}
-                  className={`cursor-pointer p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                  onClick={() => !isMissionCritical && onTogglePowerAllocation('communications')}
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
+                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${
                     state.powerAllocation.communications
                       ? 'bg-blue-950/60 border-emerald-500 text-white'
                       : 'bg-slate-950 border-slate-800 text-slate-500'

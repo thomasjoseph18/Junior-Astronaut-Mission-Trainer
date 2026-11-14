@@ -42,6 +42,7 @@ export interface SolDailyEvent {
   description: string;
   solarModifier: number; // multiplier on solar, e.g. 0.7 during dust
   thermalModifierKw: number; // extra kW needed if cold
+  dustAccumulation: number; // deterministic % dust added on this Sol
   tip: string;
 }
 
