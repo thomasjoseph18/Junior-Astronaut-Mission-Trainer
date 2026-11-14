@@ -119,7 +119,7 @@ export function App() {
 
   return (
     <div
-      className={`relative w-screen h-screen overflow-hidden bg-slate-950 font-sans text-slate-100 flex flex-col ${
+      className={`relative w-screen h-screen overflow-hidden bg-[#020617] font-sans text-slate-100 flex flex-col scanlines ${
         settings.textSize === 'large' ? 'text-base sm:text-lg' : 'text-sm'
       }`}
     >
@@ -151,7 +151,7 @@ export function App() {
 
       {/* Main Content Area (Scrollable overlay above 3D Canvas) */}
       <div className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 scrollbar-thin scrollbar-thumb-slate-800">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {currentTab === 'home' && (
             <WelcomeView
               onNavigate={setCurrentTab}

@@ -42,7 +42,7 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
   });
 
   const renderBadgeIcon = (iconName: string, unlocked: boolean) => {
-    const iconClass = `w-7 h-7 ${unlocked ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-slate-500'}`;
+    const iconClass = `w-8 h-8 ${unlocked ? 'text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'text-slate-600'}`;
 
     switch (iconName) {
       case 'Rocket':
@@ -70,48 +70,55 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'survival':
-        return 'text-emerald-300 border-emerald-500/40 bg-emerald-950/40';
+        return 'text-emerald-300 border-emerald-500/40 bg-emerald-950/50';
       case 'engineering':
-        return 'text-cyan-300 border-cyan-500/40 bg-cyan-950/40';
+        return 'text-cyan-300 border-cyan-500/40 bg-cyan-950/50';
       case 'milestone':
-        return 'text-amber-300 border-amber-500/40 bg-amber-950/40';
+        return 'text-amber-300 border-amber-500/40 bg-amber-950/50';
       case 'exploration':
-        return 'text-purple-300 border-purple-500/40 bg-purple-950/40';
+        return 'text-purple-300 border-purple-500/40 bg-purple-950/50';
       default:
         return 'text-slate-300 border-slate-700 bg-slate-800';
     }
   };
 
   return (
-    <div className="space-y-6">
-      
-      {/* Header Banner with Progression Bar */}
-      <div className="rounded-2xl border border-amber-500/30 bg-slate-900/80 p-5 sm:p-6 backdrop-blur-xl shadow-xl shadow-amber-950/20">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <span className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
-              <Trophy className="w-7 h-7" />
+    <div className="space-y-7 animate-fadeIn pb-16">
+
+      {/* 1. TOP HEADER BANNER WITH PROGRESS BAR */}
+      <div className="p-6 sm:p-8 rounded-3xl aerospace-hud-amber relative overflow-hidden">
+        <div className="hud-corner-tl" />
+        <div className="hud-corner-tr" />
+        <div className="hud-corner-bl" />
+        <div className="hud-corner-br" />
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="flex items-center space-x-3.5">
+            <span className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-400">
+              <Trophy className="w-8 h-8" />
             </span>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-                <span>Astronaut Badge &amp; Honor Room</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-950 border border-amber-500/40 text-amber-300">
-                  STEM MERIT
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-950 border border-amber-500/40 text-amber-300 font-bold uppercase">
+                  NASA ASTRONAUT MERIT EMBLEMS
                 </span>
+                <span className="text-xs font-mono text-slate-400">
+                  SOL {currentSol} ACTIVE
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-display font-black text-white mt-1">
+                Astronaut Badge &amp; Honor Room
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400">
-                Earn NASA mission badges by mastering life-support engineering, surviving critical solar events, and exploring planetary landmarks.
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800 self-start sm:self-center">
-            <Award className="w-5 h-5 text-amber-400" />
+          <div className="flex items-center space-x-3 bg-slate-950/90 px-5 py-3 rounded-2xl border border-slate-800 self-start sm:self-center shadow-lg">
+            <Award className="w-6 h-6 text-amber-400" />
             <div className="text-right">
-              <div className="text-xs font-mono uppercase tracking-wider text-slate-400">
-                Merits Unlocked
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-tech">
+                MERITS UNLOCKED
               </div>
-              <div className="text-base font-black text-amber-300 font-mono">
+              <div className="text-lg font-black text-amber-300 font-display">
                 {unlockedCount} / {totalCount} Badges
               </div>
             </div>
@@ -119,16 +126,16 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
         </div>
 
         {/* Global Progress Bar */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-2 text-xs font-mono text-slate-300">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Mission Progress at Sol {currentSol}:</span>
+            <span>Mission Badges Earned across Sols:</span>
           </div>
 
           <div className="flex items-center space-x-3 flex-1 sm:max-w-md">
-            <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
+            <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800 p-0.5">
               <div
-                className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-500 rounded-full"
+                className="h-full bg-gradient-to-r from-amber-500 to-yellow-300 transition-all duration-700 rounded-full glow-amber"
                 style={{ width: `${completionPercentage}%` }}
               />
             </div>
@@ -139,16 +146,16 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
+      {/* 2. CATEGORY FILTER TABS */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center space-x-1.5 text-xs font-mono text-slate-400 mr-2">
-          <Filter className="w-3.5 h-3.5" />
-          <span>Filter Badges:</span>
+        <div className="flex items-center space-x-1.5 text-xs font-mono text-slate-300 mr-2 font-tech">
+          <Filter className="w-3.5 h-3.5 text-amber-400" />
+          <span>FILTER MERITS:</span>
         </div>
 
         {[
-          { key: 'all', label: 'All Badges' },
-          { key: 'survival', label: 'Survival' },
+          { key: 'all', label: 'All Merits' },
+          { key: 'survival', label: 'Life Support' },
           { key: 'engineering', label: 'Engineering' },
           { key: 'milestone', label: 'Milestones' },
           { key: 'exploration', label: 'Exploration' },
@@ -156,49 +163,55 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
           <button
             key={tab.key}
             onClick={() => setActiveCategory(tab.key as CategoryFilter)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeCategory === tab.key
-                ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-950/40'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
-            }`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-tech font-bold tracking-wider transition-all cursor-pointer ${activeCategory === tab.key
+                ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-950/50 glow-amber'
+                : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800'
+              }`}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Badges Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* 3. BADGES GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredAchievements.map((badge) => {
           const isUnlocked = badge.unlocked;
 
           return (
             <div
               key={badge.id}
-              className={`rounded-2xl border p-5 backdrop-blur-xl transition-all duration-300 flex flex-col justify-between space-y-4 ${
-                isUnlocked
-                  ? 'border-amber-400/50 bg-gradient-to-b from-slate-900/90 to-amber-950/20 shadow-xl shadow-amber-950/20'
-                  : 'border-slate-800/80 bg-slate-900/40 opacity-75 hover:opacity-100'
-              }`}
+              className={`rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between space-y-4 relative overflow-hidden ${isUnlocked
+                  ? 'border-2 border-amber-400/80 aerospace-hud-amber shadow-xl shadow-amber-950/40 glow-amber scale-[1.01]'
+                  : 'border border-slate-800/80 bg-slate-950/60 opacity-80 hover:opacity-100 hover:border-slate-700'
+                }`}
             >
+              {isUnlocked && (
+                <>
+                  <div className="hud-corner-tl" />
+                  <div className="hud-corner-tr" />
+                  <div className="hud-corner-bl" />
+                  <div className="hud-corner-br" />
+                </>
+              )}
+
               {/* Badge Top Header */}
               <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3.5">
                   <div
-                    className={`w-13 h-13 rounded-2xl border flex items-center justify-center transition-transform hover:scale-105 ${
-                      isUnlocked
-                        ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border-amber-400/60 shadow-lg shadow-amber-500/20'
-                        : 'bg-slate-950 border-slate-800'
-                    }`}
+                    className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-transform hover:scale-105 shadow-md ${isUnlocked
+                        ? 'bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-950/40 border-amber-400/80'
+                        : 'bg-slate-900 border-slate-800'
+                      }`}
                   >
                     {renderBadgeIcon(badge.icon, isUnlocked)}
                   </div>
                   <div>
-                    <h2 className={`text-base font-black ${isUnlocked ? 'text-white' : 'text-slate-400'}`}>
+                    <h2 className={`text-base font-display font-bold ${isUnlocked ? 'text-white' : 'text-slate-400'}`}>
                       {badge.name}
                     </h2>
                     <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded-md border font-semibold uppercase ${getCategoryColor(
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider ${getCategoryColor(
                         badge.category
                       )}`}
                     >
@@ -209,12 +222,12 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
 
                 <div>
                   {isUnlocked ? (
-                    <span className="flex items-center space-x-1 text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-1 rounded-md">
+                    <span className="flex items-center space-x-1 text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/50 px-2.5 py-1 rounded-lg">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{badge.unlockedAtSol ? `Sol ${badge.unlockedAtSol}` : 'UNLOCKED'}</span>
+                      <span>{badge.unlockedAtSol ? `SOL ${badge.unlockedAtSol}` : 'AWARDED'}</span>
                     </span>
                   ) : (
-                    <span className="flex items-center space-x-1 text-[11px] font-mono text-slate-500 bg-slate-950 border border-slate-800 px-2 py-1 rounded-md">
+                    <span className="flex items-center space-x-1 text-[11px] font-mono text-slate-500 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
                       <Lock className="w-3.5 h-3.5" />
                       <span>LOCKED</span>
                     </span>
@@ -223,35 +236,34 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
               </div>
 
               {/* Badge Description */}
-              <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-200 leading-relaxed font-sans">
                 {badge.description}
               </p>
 
               {/* Criteria Card */}
-              <div className="bg-slate-950/70 border border-slate-800/80 p-2.5 rounded-xl space-y-1">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                  Unlock Criteria:
+              <div className="bg-slate-950/80 border border-slate-800/80 p-3 rounded-xl space-y-1">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold font-tech">
+                  Unlock Objective:
                 </div>
-                <div className="text-xs text-slate-300 font-medium">
+                <div className="text-xs text-slate-300 font-medium font-sans">
                   {badge.criteria}
                 </div>
               </div>
 
               {/* Educational Fact Card */}
               <div
-                className={`p-3 rounded-xl border space-y-1 ${
-                  isUnlocked
+                className={`p-3.5 rounded-xl border space-y-1 ${isUnlocked
                     ? 'border-amber-500/30 bg-amber-950/20'
                     : 'border-slate-800 bg-slate-950/40'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-1.5 text-amber-300">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-mono uppercase tracking-wider font-bold">
-                    NASA Science Fact
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider font-bold font-tech">
+                    NASA STEM Flight Heritage
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed font-sans">
                   {badge.educationalFact}
                 </p>
               </div>
@@ -261,23 +273,28 @@ export const AchievementsView: React.FC<AchievementsViewProps> = ({
         })}
       </div>
 
-      {/* Bottom CTA to return or test skills */}
+      {/* Bottom CTA to test skills */}
       {onNavigateToHabitat && (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div className="rounded-3xl aerospace-hud p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="hud-corner-tl" />
+          <div className="hud-corner-tr" />
+          <div className="hud-corner-bl" />
+          <div className="hud-corner-br" />
+
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-white">
-              Ready to test your astronaut skills in the field?
+            <h3 className="text-base font-display font-bold text-white uppercase tracking-wider">
+              Ready to earn your next mission merit?
             </h3>
-            <p className="text-xs text-slate-400">
-              Jump into the Habitat Control Deck to adjust life support, wipe solar panels, and guide your crew through 30 Sols!
+            <p className="text-xs text-slate-300 font-sans">
+              Enter the Habitat Control Deck to balance life support, engage ice smelting, and guide your habitat through all 30 Sols!
             </p>
           </div>
 
           <button
             onClick={onNavigateToHabitat}
-            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-900/50 transition-all cursor-pointer whitespace-nowrap"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-display font-bold text-xs shadow-lg shadow-blue-900/50 transition-all cursor-pointer whitespace-nowrap glow-cyan"
           >
-            Open Habitat Control Deck
+            ENTER HABITAT COMMAND DECK
           </button>
         </div>
       )}

@@ -15,6 +15,7 @@ import {
   Layers,
   ChevronRight,
   Info,
+  Crosshair,
 } from 'lucide-react';
 import { Destination, ExplorationPoint } from '../../types';
 import { EXPLORATION_POINTS } from '../../data/exploration';
@@ -93,31 +94,44 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
   const progressPercent = Math.round((totalExploredInDest / sites.length) * 100);
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="rounded-2xl border border-cyan-500/30 bg-slate-900/80 p-5 sm:p-6 backdrop-blur-xl shadow-xl shadow-cyan-950/20">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+    <div className="space-y-7 animate-fadeIn pb-16">
+      
+      {/* 1. TOP EVA FLIGHT HEADER BANNER */}
+      <div className={`p-6 sm:p-8 rounded-3xl relative overflow-hidden ${isMars ? 'aerospace-hud-mars' : 'aerospace-hud'}`}>
+        <div className="hud-corner-tl" />
+        <div className="hud-corner-tr" />
+        <div className="hud-corner-bl" />
+        <div className="hud-corner-br" />
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="space-y-2">
             <div className="flex items-center space-x-2">
-              <span className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
-                <Compass className="w-6 h-6" />
+              <span className={`p-2.5 rounded-xl border ${isMars ? 'bg-amber-950/80 border-amber-500/40 text-amber-400' : 'bg-cyan-950/80 border-cyan-500/40 text-cyan-400'}`}>
+                <Crosshair className="w-6 h-6 animate-pulse" />
               </span>
               <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-wide text-white flex items-center gap-2">
-                  <span>Planetary Surface Exploration Deck</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-400/40 text-cyan-300">
-                    EVA SURVEY
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-950 border border-slate-700 text-slate-300 font-bold uppercase">
+                    EVA SURFACE RADAR
                   </span>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold ${
+                    isMars ? 'bg-amber-950 border-amber-500/40 text-amber-300' : 'bg-cyan-950 border-cyan-500/40 text-cyan-300'
+                  }`}>
+                    {isMars ? 'JEZERO QUADRANGLE' : 'SHACKLETON QUADRANGLE'}
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-display font-black text-white mt-1">
+                  Planetary Surface Exploration Terminal
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-400">
-                  Explore scientific landmarks, historical landing sites, and resource deposits mapped by NASA orbiters and rovers.
-                </p>
               </div>
             </div>
+            <p className="text-xs sm:text-sm text-slate-300 font-sans max-w-2xl">
+              Survey extraterrestrial geological landmarks, sample ancient lakebed sediments and cryogenic cold traps, and inspect historical Apollo and Perseverance landing zones.
+            </p>
           </div>
 
           {/* Destination Selector Pill */}
-          <div className="flex items-center space-x-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+          <div className="flex items-center space-x-2 bg-slate-950/90 p-1.5 rounded-2xl border border-slate-800 self-start sm:self-center shadow-lg">
             <button
               onClick={() => {
                 setActiveDest('moon');
@@ -125,9 +139,9 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
                 if (moonFirst) setSelectedSiteId(moonFirst.id);
                 if (onSelectDestination) onSelectDestination('moon');
               }}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-tech font-bold tracking-wider transition-all cursor-pointer ${
                 !isMars
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50'
+                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/40 font-black'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -141,9 +155,9 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
                 if (marsFirst) setSelectedSiteId(marsFirst.id);
                 if (onSelectDestination) onSelectDestination('mars');
               }}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-tech font-bold tracking-wider transition-all cursor-pointer ${
                 isMars
-                  ? 'bg-amber-600 text-white shadow-md shadow-amber-900/50'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/40 font-black'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -153,46 +167,48 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
         </div>
 
         {/* Survey Progress Bar */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
             <Layers className="w-4 h-4 text-cyan-400" />
             <span className="text-xs font-mono text-slate-300">
-              Sector Survey Progress:{' '}
-              <strong className="text-cyan-300 font-bold">{totalExploredInDest} of {sites.length} Sites Analyzed</strong>
+              Sector Geological Survey:{' '}
+              <strong className={isMars ? 'text-amber-300 font-bold' : 'text-cyan-300 font-bold'}>
+                {totalExploredInDest} of {sites.length} Landmarks Analyzed
+              </strong>
             </span>
           </div>
 
           <div className="flex items-center space-x-3 flex-1 sm:max-w-xs">
-            <div className="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+            <div className="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800 p-0.5">
               <div
-                className={`h-full transition-all duration-500 ${
-                  isMars ? 'bg-amber-500' : 'bg-cyan-500'
+                className={`h-full rounded-full transition-all duration-700 ${
+                  isMars ? 'bg-gradient-to-r from-amber-500 to-orange-400 glow-amber' : 'bg-gradient-to-r from-cyan-500 to-blue-400 glow-cyan'
                 }`}
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span className="text-xs font-mono text-cyan-300 font-bold min-w-[3rem]">
+            <span className={`text-xs font-mono font-bold min-w-[3rem] ${isMars ? 'text-amber-300' : 'text-cyan-300'}`}>
               {progressPercent}%
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Exploration Grid: Site Selector & Detail Inspector */}
+      {/* 2. MAIN EXPLORATION GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: List of Sites */}
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
-              {isMars ? 'Martian Geologic Coordinates' : 'Lunar Surface Coordinates'}
+            <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold font-tech">
+              {isMars ? 'Martian Quadrangle Coordinates' : 'Lunar Polar Coordinates'}
             </span>
-            <span className="text-[11px] font-mono text-cyan-400">
-              {sites.length} Active Targets
+            <span className={`text-[11px] font-mono font-bold ${isMars ? 'text-amber-400' : 'text-cyan-400'}`}>
+              {sites.length} Target Vectors
             </span>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {sites.map((site) => {
               const isExplored = exploredIds.includes(site.id);
               const isSelected = activeSite?.id === site.id;
@@ -201,39 +217,39 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
                 <button
                   key={site.id}
                   onClick={() => handleInspectSite(site)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all cursor-pointer flex items-start justify-between group ${
+                  className={`w-full text-left p-4.5 rounded-2xl border transition-all cursor-pointer flex items-start justify-between group relative overflow-hidden ${
                     isSelected
                       ? isMars
-                        ? 'border-amber-400/80 bg-amber-950/30 shadow-lg shadow-amber-950/30'
-                        : 'border-cyan-400/80 bg-cyan-950/30 shadow-lg shadow-cyan-950/30'
-                      : 'border-slate-800 bg-slate-900/60 hover:bg-slate-850 hover:border-slate-700'
+                        ? 'border-amber-400 aerospace-hud-mars shadow-xl shadow-amber-950/40 scale-[1.01]'
+                        : 'border-cyan-400 aerospace-hud shadow-xl shadow-cyan-950/40 scale-[1.01]'
+                      : 'border-slate-800 bg-slate-950/60 hover:bg-slate-900/80 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-start space-x-3.5">
                     <div
-                      className={`p-2.5 rounded-lg border flex-shrink-0 ${
+                      className={`p-3 rounded-xl border flex-shrink-0 transition-transform group-hover:scale-105 ${
                         isSelected
                           ? isMars
-                            ? 'bg-amber-500/20 border-amber-400/50'
-                            : 'bg-cyan-500/20 border-cyan-400/50'
-                          : 'bg-slate-950 border-slate-800'
+                            ? 'bg-amber-500/20 border-amber-400/60'
+                            : 'bg-cyan-500/20 border-cyan-400/60'
+                          : 'bg-slate-900 border-slate-800'
                       }`}
                     >
                       {renderIcon(site.icon)}
                     </div>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center space-x-1.5">
-                        <h2 className="text-sm font-bold text-white group-hover:text-cyan-200 transition-colors">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <h2 className="text-sm font-display font-bold text-white group-hover:text-cyan-200 transition-colors">
                           {site.title}
                         </h2>
                         {isExplored && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-[11px] font-mono text-slate-400 truncate max-w-[210px] sm:max-w-xs">
-                        {site.coordinates}
+                      <p className="text-[11px] font-mono text-cyan-300 font-semibold truncate max-w-[210px] sm:max-w-xs">
+                        COORD: {site.coordinates}
                       </p>
-                      <p className="text-xs text-slate-300 line-clamp-1">
+                      <p className="text-xs text-slate-300 line-clamp-1 font-sans">
                         {site.subtitle}
                       </p>
                     </div>
@@ -241,7 +257,7 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
 
                   <ChevronRight
                     className={`w-4 h-4 mt-2 transition-transform ${
-                      isSelected ? 'text-cyan-400 translate-x-1' : 'text-slate-600'
+                      isSelected ? (isMars ? 'text-amber-400 translate-x-1' : 'text-cyan-400 translate-x-1') : 'text-slate-600'
                     }`}
                   />
                 </button>
@@ -253,20 +269,24 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
         {/* Right Column: Detailed Scientific Dossier */}
         <div className="lg:col-span-7">
           {activeSite ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 backdrop-blur-xl shadow-xl space-y-6">
-              
+            <div className={`p-6 sm:p-7 rounded-3xl relative overflow-hidden space-y-6 ${isMars ? 'aerospace-hud-mars' : 'aerospace-hud'}`}>
+              <div className="hud-corner-tl" />
+              <div className="hud-corner-tr" />
+              <div className="hud-corner-bl" />
+              <div className="hud-corner-br" />
+
               {/* Site Header */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 border-b border-slate-800">
                 <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="p-2 rounded-lg bg-cyan-950 border border-cyan-500/30">
+                  <div className="flex items-center space-x-3">
+                    <span className="p-3 rounded-2xl bg-slate-950 border border-cyan-500/30">
                       {renderIcon(activeSite.icon)}
                     </span>
                     <div>
-                      <h2 className="text-lg sm:text-xl font-black text-white">
+                      <h2 className="text-xl sm:text-2xl font-display font-black text-white">
                         {activeSite.title}
                       </h2>
-                      <p className="text-xs font-mono text-cyan-300">
+                      <p className="text-xs font-mono font-bold text-cyan-300 font-tech">
                         {activeSite.subtitle}
                       </p>
                     </div>
@@ -274,91 +294,91 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-2 self-start sm:self-center">
-                  <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-300 flex items-center space-x-1">
-                    <MapPin className="w-3 h-3 text-cyan-400" />
+                  <span className="text-[11px] font-mono px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 flex items-center space-x-1.5 shadow-inner">
+                    <MapPin className="w-3.5 h-3.5 text-cyan-400" />
                     <span>{activeSite.coordinates}</span>
                   </span>
                 </div>
               </div>
 
               {/* Description */}
-              <div className="text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-950/50 p-4 rounded-xl border border-slate-800/80">
+              <div className="text-xs sm:text-sm text-slate-200 leading-relaxed bg-slate-950/70 p-4.5 rounded-2xl border border-slate-800/80 font-sans">
                 {activeSite.description}
               </div>
 
               {/* Scientific Significance Card */}
-              <div className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-4 space-y-2">
+              <div className="rounded-2xl border border-blue-500/30 bg-blue-950/20 p-4.5 space-y-2">
                 <div className="flex items-center space-x-2 text-blue-400">
                   <BookOpen className="w-4 h-4" />
-                  <span className="text-xs font-mono uppercase tracking-wider font-bold">
-                    Scientific Significance &amp; Research Value
+                  <span className="text-xs font-tech font-bold uppercase tracking-wider">
+                    Scientific Significance &amp; Research Potential
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
                   {activeSite.scientificSignificance}
                 </p>
               </div>
 
               {/* NASA & Artemis Connection Card */}
-              <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4 space-y-2">
+              <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-4.5 space-y-2">
                 <div className="flex items-center space-x-2 text-indigo-400">
                   <Rocket className="w-4 h-4" />
-                  <span className="text-xs font-mono uppercase tracking-wider font-bold">
+                  <span className="text-xs font-tech font-bold uppercase tracking-wider">
                     NASA Mission &amp; Flight Connection
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
                   {activeSite.nasaConnection}
                 </p>
               </div>
 
               {/* Junior Astronaut STEM Discovery Fact */}
-              <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 space-y-2">
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4.5 space-y-2">
                 <div className="flex items-center space-x-2 text-amber-400">
                   <Sparkles className="w-4 h-4" />
-                  <span className="text-xs font-mono uppercase tracking-wider font-bold">
+                  <span className="text-xs font-tech font-bold uppercase tracking-wider">
                     Cadet Field Discovery Fact
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed font-medium">
+                <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed font-sans font-medium">
                   {activeSite.interactiveFact}
                 </p>
               </div>
 
               {/* Action Button: Log Survey */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center space-x-2 text-xs text-slate-400">
                   <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                   <span>
-                    Badge Link: <strong className="text-cyan-300 font-mono">{activeSite.badgeName}</strong>
+                    Merit Badge Link: <strong className="text-cyan-300 font-mono font-bold">{activeSite.badgeName}</strong>
                   </span>
                 </div>
 
                 <div className="flex items-center space-x-3 w-full sm:w-auto">
                   <button
                     onClick={() => handleInspectSite(activeSite)}
-                    className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg transition-all cursor-pointer ${
+                    className={`flex-1 sm:flex-none flex items-center justify-center space-x-2.5 px-6 py-3 rounded-xl font-display font-bold text-xs shadow-xl transition-all cursor-pointer ${
                       exploredIds.includes(activeSite.id)
-                        ? 'bg-emerald-600/30 border border-emerald-500 text-emerald-300'
+                        ? 'bg-emerald-600/30 border border-emerald-500 text-emerald-300 glow-emerald'
                         : isMars
-                        ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/40'
-                        : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/40'
+                        ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/50 glow-amber'
+                        : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/50 glow-cyan'
                     }`}
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>
                       {exploredIds.includes(activeSite.id)
-                        ? 'Geological Survey Logged ✓'
-                        : 'Log Geological Survey'}
+                        ? 'GEOLOGICAL SURVEY LOGGED ✓'
+                        : 'LOG GEOLOGICAL SURVEY'}
                     </span>
                   </button>
 
                   {onNavigateToHabitat && (
                     <button
                       onClick={onNavigateToHabitat}
-                      className="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold text-xs transition-colors cursor-pointer"
+                      className="px-4.5 py-3 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 font-tech font-bold text-xs tracking-wider transition-colors cursor-pointer"
                     >
-                      Return to Deck
+                      RETURN TO DECK
                     </button>
                   )}
                 </div>
@@ -366,7 +386,7 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
 
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-12 text-center text-slate-400">
+            <div className="rounded-3xl aerospace-hud p-12 text-center text-slate-400 font-mono">
               Select an exploration landmark from the left column to begin surface survey.
             </div>
           )}
