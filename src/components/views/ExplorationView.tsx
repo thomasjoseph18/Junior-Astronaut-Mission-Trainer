@@ -25,6 +25,7 @@ interface ExplorationViewProps {
   onSelectDestination?: (dest: Destination) => void;
   onUnlockAchievement?: (id: string) => void;
   onNavigateToHabitat?: () => void;
+  onNavigateToPOV?: () => void;
 }
 
 export const ExplorationView: React.FC<ExplorationViewProps> = ({
@@ -32,6 +33,7 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
   onSelectDestination,
   onUnlockAchievement,
   onNavigateToHabitat,
+  onNavigateToPOV,
 }) => {
   const [activeDest, setActiveDest] = useState<Destination>(destination);
   const [exploredIds, setExploredIds] = useState<string[]>(() => {
@@ -191,12 +193,22 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
               {progressPercent}%
             </span>
           </div>
+
+          {/* Lunar POV Entry — Moon only */}
+          {!isMars && onNavigateToPOV && (
+            <button
+              onClick={onNavigateToPOV}
+              className="flex items-center space-x-2.5 px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-display font-bold text-xs shadow-lg shadow-cyan-900/50 glow-cyan transition-all cursor-pointer flex-shrink-0"
+            >
+              <Crosshair className="w-4 h-4" />
+              <span>🌕 ENTER LUNAR POV</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* 2. MAIN EXPLORATION GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">        
         {/* Left Column: List of Sites */}
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between px-1">
