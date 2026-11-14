@@ -6,224 +6,9 @@ import {
   WaterRecyclerMode,
   WaterRation,
   PowerAllocation,
-  SolDailyEvent,
   JournalEntry,
 } from '../types';
-
-// ================= SCIENTIFICALLY ACCURATE LUNAR EVENTS =================
-// The Moon has no atmosphere (vacuum/trace exosphere).
-// Dust is surface regolith moved electrostatically across the terminator or kicked up by rovers.
-const LUNAR_SOL_EVENTS: Record<number, SolDailyEvent> = {
-  1: {
-    title: 'Sol 1: Touchdown on Shackleton Crater Rim',
-    description: 'Habitat airbridge pressurized in the lunar vacuum. Primary solar tracking arrays deployed on the crater rim with clean glass.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 0,
-    tip: 'The Moon has no atmosphere. Keep Life Support O₂ and Thermal Regulation active to maintain a safe 21°C habitat.',
-  },
-  2: {
-    title: 'Sol 2: Peak Solar Illumination at Polar Ridge',
-    description: 'Sun tracking towers catch continuous low-angle solar rays along the elevated rim peaks.',
-    solarModifier: 1.15,
-    thermalModifierKw: 0,
-    dustAccumulation: 2,
-    tip: 'Store surplus solar electricity in central battery banks for periods when terrain creates localized shadow.',
-  },
-  3: {
-    title: 'Sol 3: Electrostatic Regolith Levitation',
-    description: 'Solar UV radiation electrostatically charges fine surface regolith across the terminator, depositing a light dust coating on solar cells.',
-    solarModifier: 0.88,
-    thermalModifierKw: 0,
-    dustAccumulation: 8,
-    tip: 'Click "Clean Solar Dust Wipers" to brush away electrostatically bound dust and restore 100% solar collection.',
-  },
-  4: {
-    title: 'Sol 4: Polar Crater Shadow Pass',
-    description: 'The habitat moved into an extended shadow cast by a towering crater massif. Exterior ambient temperature plummeted.',
-    solarModifier: 0.9,
-    thermalModifierKw: 10,
-    dustAccumulation: 2,
-    tip: 'Thermal heating demand increases in deep shadow. Ensure Thermal Regulation stays powered to prevent gradual cooling.',
-  },
-  5: {
-    title: 'Sol 5: Lunar Rover EVA to Crater Interior',
-    description: 'Crew drove the unpressurized rover into the permanent darkness of Shackleton Crater. Extra suit battery and oxygen consumed during airlock cycles.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 4,
-    tip: 'Switch Oxygen Generation to "Boost Mode" if habitat reserves dipped during intensive airlock operations.',
-  },
-  8: {
-    title: 'Sol 8: Subsurface Lunar Water-Ice Discovery',
-    description: 'Neutron spectrometer readings confirmed crystalline water-ice mixed within deep regolith cold traps beneath the surface!',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 2,
-    tip: 'Toggle "Ice Smelter" ON in Water Systems to melt stored polar ice into drinkable water!',
-  },
-  12: {
-    title: 'Sol 12: Terminator Crossing Dust Migration',
-    description: 'Sharp thermal transition as the lunar day progresses causes localized electrostatic regolith migration near the landing pad.',
-    solarModifier: 0.82,
-    thermalModifierKw: 0,
-    dustAccumulation: 10,
-    tip: 'Clean solar dust wipers today to restore peak photovoltaic efficiency.',
-  },
-  15: {
-    title: 'Sol 15: Halfway Mark! (15 Sols Completed)',
-    description: 'Artemis Mission Control in Houston transmits congratulations to the junior lunar expedition crew!',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 3,
-    tip: 'You have survived half the lunar mission! Verify all environmental life-support reserves.',
-  },
-  20: {
-    title: 'Sol 20: Solar Cosmic Ray Alert',
-    description: 'Space radiation monitors detect energetic proton flux from a solar flare. Heavy regolith berm shielding protects the crew habitat.',
-    solarModifier: 1.05,
-    thermalModifierKw: 0,
-    dustAccumulation: 2,
-    tip: 'Keep communications powered to monitor radiation warning updates from the Deep Space Network.',
-  },
-  25: {
-    title: 'Sol 25: Deep Core Sample Extraction',
-    description: 'Automated core drill returned a 50kg cylinder of pristine water-ice and volatiles from a 2-billion-year-old cold trap.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 3,
-    tip: 'Melt the ice core to guarantee full potable water tanks for the final push to Sol 30.',
-  },
-  30: {
-    title: 'Sol 30: Final Sol & Lunar Mission Accomplished!',
-    description: 'All 30 Sols of lunar South Pole habitat survival achieved! Artemis Senior Astronaut Wings unlocked!',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 0,
-    tip: 'Outstanding stewardship, Commander! Your lunar base camp is ready for permanent human settlement.',
-  },
-};
-
-// ================= SCIENTIFICALLY ACCURATE MARS EVENTS =================
-// Mars has a thin 95% CO2 atmosphere with atmospheric dust storms, wind, and lower solar irradiance.
-const MARS_SOL_EVENTS: Record<number, SolDailyEvent> = {
-  1: {
-    title: 'Sol 1: Touchdown on Jezero Crater Delta',
-    description: 'Pressurized habitat dome sealed against the thin Martian CO₂ atmosphere. Photovoltaic glass is pristine and dust-free.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 0,
-    tip: 'MOXIE unit is ready to convert Martian atmospheric CO₂ into breathable Oxygen. Keep Thermal Regulation powered.',
-  },
-  2: {
-    title: 'Sol 2: Midday Solar Insolation',
-    description: 'Thin carbon dioxide skies allow clear sunlight over the ancient delta lakebed deposits.',
-    solarModifier: 1.10,
-    thermalModifierKw: 0,
-    dustAccumulation: 3,
-    tip: 'Charge batteries while sunlight is strong before the cold Martian night.',
-  },
-  3: {
-    title: 'Sol 3: Dust Devil Sighting',
-    description: 'A localized spinning dust vortex crossed the western crater floor, depositing fine ferric oxide dust on solar panels.',
-    solarModifier: 0.85,
-    thermalModifierKw: 0,
-    dustAccumulation: 10,
-    tip: 'Use "Clean Solar Dust Wipers" to clear iron-oxide dust from solar cells.',
-  },
-  4: {
-    title: 'Sol 4: Martian Nocturnal Freeze',
-    description: 'Surface temperature dropped to -65°C under the thin atmosphere. Electric thermal heaters active throughout the night.',
-    solarModifier: 1.0,
-    thermalModifierKw: 8,
-    dustAccumulation: 3,
-    tip: 'Martian night chill demands steady thermal power. Keep heating powered to protect airlock seals.',
-  },
-  5: {
-    title: 'Sol 5: First Geologic Delta EVA',
-    description: 'Crew sampled ancient riverbed mudstones. Increased oxygen consumption during 4-hour traverse in pressurized suits.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 4,
-    tip: 'Set Oxygen Mode to "Standard" or "Boost" to restore habitat atmospheric pressure.',
-  },
-  8: {
-    title: 'Sol 8: Glacial Subsurface Ice Horizon',
-    description: 'Ground-penetrating radar identified pure glacial water-ice deposits beneath 30cm of soil!',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 3,
-    tip: 'Activate the Ice Smelter to turn raw glacial ice into pure drinking water.',
-  },
-  12: {
-    title: 'Sol 12: Regional Atmospheric Dust Storm',
-    description: 'Atmospheric winds lofted fine dust into the upper Martian troposphere, filtering incoming sunlight.',
-    solarModifier: 0.70,
-    thermalModifierKw: 5,
-    dustAccumulation: 14,
-    tip: 'Solar generation is reduced by airborne dust. Switch Water Recycler to "Basic" to conserve battery power.',
-  },
-  15: {
-    title: 'Sol 15: Halfway Mark! (15 Martian Sols Completed)',
-    description: 'Telemetry transmitted across 140 million miles to Earth. Mission Control confirms nominal crew vitals.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 4,
-    tip: '15 Sols completed! You have proven human habitability on Mars is possible.',
-  },
-  20: {
-    title: 'Sol 20: Atmospheric Haze Clearing',
-    description: 'High-altitude atmospheric dust settles out. Solar flux improves significantly over Jezero Crater.',
-    solarModifier: 1.05,
-    thermalModifierKw: 0,
-    dustAccumulation: 3,
-    tip: 'Take advantage of bright Martian skies to run full water recycling.',
-  },
-  25: {
-    title: 'Sol 25: Permafrost Deep Core Sample',
-    description: 'Scientific drilling rig returned massive ice core samples from ancient alluvial deposits. Water reserves expanded.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 4,
-    tip: 'Melt ice samples to secure full water tanks for the final sols.',
-  },
-  30: {
-    title: 'Sol 30: Final Sol & Mars Mission Accomplished!',
-    description: 'All 30 Sols of Martian survival achieved! You have laid the foundation for humanity’s first city on Mars!',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 0,
-    tip: 'Mission Victory, Commander! You have successfully survived 30 Sols on the Red Planet.',
-  },
-};
-
-function getDailyEvent(destination: Destination, sol: number): SolDailyEvent {
-  const table = destination === 'mars' ? MARS_SOL_EVENTS : LUNAR_SOL_EVENTS;
-  if (table[sol]) {
-    return table[sol];
-  }
-
-  // Scientifically grounded default events for intermediate days
-  if (destination === 'mars') {
-    return {
-      title: `Sol ${sol}: Nominal Martian Surface Operations`,
-      description: 'Clear carbon dioxide sky over Jezero Crater. Steady solar collection on solar arrays.',
-      solarModifier: 1.0,
-      thermalModifierKw: 0,
-      dustAccumulation: 3, // deterministic 3% dust per sol
-      tip: 'Monitor O₂, Water, and Battery storage balance to keep your crew healthy.',
-    };
-  }
-
-  return {
-    title: `Sol ${sol}: Nominal Lunar Surface Operations`,
-    description: 'Direct vacuum solar insolation over Shackleton Crater rim. Thermal and electrical systems stable.',
-    solarModifier: 1.0,
-    thermalModifierKw: 0,
-    dustAccumulation: 2, // deterministic 2% dust per sol
-    tip: 'Monitor O₂, Water, and Battery storage balance to keep your crew healthy.',
-  };
-}
+import { getDailySolEvent } from '../data/solEvents';
 
 const INITIAL_POWER_ALLOCATION: PowerAllocation = {
   lifeSupportO2: true,      // 25 kW
@@ -263,7 +48,7 @@ function getInitialSimulationState(destination: Destination): HabitatSimulationS
     batteryDeltaKw: initialNet,
     habitatTempC: 21,
     habitatIntegrity: 100,
-    currentEvent: getDailyEvent(destination, 1),
+    currentEvent: getDailySolEvent(destination, 1),
     lastDebriefMessage: isMars
       ? 'Sol 1 initialized. Ares Jezero Biosphere environmental loops connected. All life support systems nominal.'
       : 'Sol 1 initialized. Shackleton Base Camp environmental loops connected. All life support systems nominal.',
@@ -272,7 +57,8 @@ function getInitialSimulationState(destination: Destination): HabitatSimulationS
 
 export function useHabitatSimulation(
   destination: Destination,
-  onJournalAdd?: (entry: JournalEntry) => void
+  onJournalAdd?: (entry: JournalEntry) => void,
+  onAchievementUnlock?: (id: string) => void
 ) {
   const [state, setState] = useState<HabitatSimulationState>(() =>
     getInitialSimulationState(destination)
@@ -353,11 +139,17 @@ export function useHabitatSimulation(
   // Actions
   const setO2Mode = useCallback((mode: O2Mode) => {
     setState((prev) => ({ ...prev, o2Mode: mode }));
-  }, []);
+    if (onAchievementUnlock && (mode === 'standard' || mode === 'boost')) {
+      onAchievementUnlock('oxygen_master');
+    }
+  }, [onAchievementUnlock]);
 
   const setWaterRecyclerMode = useCallback((mode: WaterRecyclerMode) => {
     setState((prev) => ({ ...prev, waterRecyclerMode: mode }));
-  }, []);
+    if (onAchievementUnlock && (mode === 'advanced' || mode === 'hyper')) {
+      onAchievementUnlock('water_conservation');
+    }
+  }, [onAchievementUnlock]);
 
   const setWaterRation = useCallback((ration: WaterRation) => {
     setState((prev) => ({ ...prev, waterRation: ration }));
@@ -366,6 +158,9 @@ export function useHabitatSimulation(
   const toggleIceSmelting = useCallback(() => {
     setState((prev) => {
       const next = !prev.iceSmeltingActive;
+      if (next && onAchievementUnlock) {
+        onAchievementUnlock('ice_miner');
+      }
       return {
         ...prev,
         iceSmeltingActive: next,
@@ -375,25 +170,36 @@ export function useHabitatSimulation(
         },
       };
     });
-  }, []);
+  }, [onAchievementUnlock]);
 
   const togglePowerAllocation = useCallback((key: keyof PowerAllocation) => {
-    setState((prev) => ({
-      ...prev,
-      powerAllocation: {
+    setState((prev) => {
+      const updated = {
         ...prev.powerAllocation,
         [key]: !prev.powerAllocation[key],
-      },
-    }));
-  }, []);
+      };
+      if (onAchievementUnlock && updated.lifeSupportO2 && updated.waterRecycling && updated.thermalRegulation) {
+        onAchievementUnlock('power_engineer');
+      }
+      return {
+        ...prev,
+        powerAllocation: updated,
+      };
+    });
+  }, [onAchievementUnlock]);
 
   const cleanSolarPanels = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      solarDustAccumulation: 0,
-      lastDebriefMessage: 'Solar array wipers activated! Dust cleared—solar collection efficiency restored to 100%.',
-    }));
-  }, []);
+    setState((prev) => {
+      if (prev.solarDustAccumulation >= 8 && onAchievementUnlock) {
+        onAchievementUnlock('solar_engineer');
+      }
+      return {
+        ...prev,
+        solarDustAccumulation: 0,
+        lastDebriefMessage: 'Solar array wipers activated! Dust cleared—solar collection efficiency restored to 100%.',
+      };
+    });
+  }, [onAchievementUnlock]);
 
   const useEmergencyO2Canister = useCallback(() => {
     setState((prev) => {
@@ -419,7 +225,7 @@ export function useHabitatSimulation(
     }
 
     const nextSol = state.currentSol + 1;
-    const event = getDailyEvent(destination, nextSol);
+    const event = getDailySolEvent(destination, nextSol);
 
     // 2. Battery calculations
     let newBattery = state.batteryCharge;
@@ -455,8 +261,6 @@ export function useHabitatSimulation(
     const newDust = Math.min(85, state.solarDustAccumulation + addedDust);
 
     // 6. Gradual, bounded Temperature Simulation
-    // When powered, heaters gently warm toward +21°C (+8°C per Sol).
-    // When unpowered, habitat loses heat gradually (-8°C to -12°C per Sol) bounded by surface limits.
     const isHeated = state.powerAllocation.thermalRegulation && (newBattery > 0 || calculations.netPowerKw >= 0);
     const minAmbientTemp = destination === 'mars' ? -40 : -65;
     let newTemp = state.habitatTempC;
@@ -468,7 +272,6 @@ export function useHabitatSimulation(
         newTemp = 21;
       }
     } else {
-      // Cooling drop based on unheated exposure and shadow modifier
       const coolingDrop = 8 + Math.round(event.thermalModifierKw / 2);
       newTemp = Math.max(minAmbientTemp, newTemp - coolingDrop);
     }
@@ -476,26 +279,24 @@ export function useHabitatSimulation(
     // 7. Habitat Integrity based on thermal stress and pressure
     let integrityDelta = 0;
     if (newTemp >= 18 && newO2 >= 40) {
-      // Nominal habitat conditions: automated seal maintenance can slowly recover up to 100%
       if (state.habitatIntegrity < 100) {
         integrityDelta = +1;
       }
     } else if (newTemp < 0 && newTemp >= -15) {
-      integrityDelta = -3; // Freezing causes contraction stress on seals
+      integrityDelta = -3;
     } else if (newTemp < -15) {
-      integrityDelta = -6; // Deep freeze causes severe seal brittleness
+      integrityDelta = -6;
     } else if (newTemp < 10) {
-      integrityDelta = -1; // Mild condensation on electronics
+      integrityDelta = -1;
     }
 
-    // Additional asphyxiation pressure loss penalty if O2 collapsed
     if (newO2 < 20) {
       integrityDelta -= 2;
     }
 
     const newIntegrity = Math.min(100, Math.max(0, state.habitatIntegrity + integrityDelta));
 
-    // 8. Mission Status Check (Bug 2 Fix: mutually exclusive critical vs victory)
+    // 8. Mission Status Check (Bug 2: Mutually exclusive critical vs victory)
     let newStatus: 'active' | 'victory' | 'critical' = 'active';
     if (newO2 <= 5 || newWater <= 5 || newIntegrity <= 10) {
       newStatus = 'critical';
@@ -553,11 +354,44 @@ export function useHabitatSimulation(
       lastDebriefMessage: debrief,
     });
 
-    // 11. Reliable Journaling: Emit journal entry OUTSIDE of setState!
+    // 11. Achievements trigger
+    if (onAchievementUnlock) {
+      if (nextSol === 15 && newStatus !== 'critical') {
+        onAchievementUnlock('midway_explorer');
+      }
+      if (nextSol === 30 && newStatus === 'victory') {
+        onAchievementUnlock('mission_graduate');
+      }
+    }
+
+    // 12. Reliable Journaling: Emit journal entry OUTSIDE of setState!
     if (onJournalAdd) {
-      const journalTitle = nextSol === 30
-        ? 'Sol 30 Milestone: Mission Accomplished!'
-        : `Sol ${nextSol} Field Operations & Resource Log`;
+      let journalTitle = `Sol ${nextSol} Field Operations & Resource Log`;
+      let badgeInfo: JournalEntry['badge'] = undefined;
+      const outcomeStatus: JournalEntry['outcomeStatus'] =
+        newStatus === 'active'
+          ? (newIntegrity < 50 || newO2 < 25 || newWater < 25 ? 'warning' : 'nominal')
+          : newStatus;
+
+      if (nextSol === 30) {
+        if (newStatus === 'victory') {
+          journalTitle = 'Sol 30 Milestone: 30-Sol Mission Accomplished!';
+          badgeInfo = {
+            name: 'Senior Astronaut 30-Sol Wings',
+            icon: 'Award',
+            description: 'Mastered all 30 Sols of habitat survival on a foreign planetary world!',
+          };
+        } else {
+          journalTitle = 'Sol 30 Critical Report: Mission Failed';
+          badgeInfo = undefined; // NO victory badge awarded on failure!
+        }
+      } else if (nextSol === 15 && newStatus !== 'critical') {
+        badgeInfo = {
+          name: 'Halfway Pioneer Pin',
+          icon: 'Rocket',
+          description: 'Successfully reached Sol 15 with nominal life-support reserves.',
+        };
+      }
 
       const newJournalEntry: JournalEntry = {
         id: `sol-${nextSol}-${destination}`,
@@ -566,21 +400,23 @@ export function useHabitatSimulation(
         author: 'Junior Commander (Flight Ops)',
         timestamp: `Sol ${nextSol} / 30 - ${destination === 'mars' ? 'Martian Solar Time' : 'Lunar Mission Time'}`,
         body: `Day summary: ${event.title}. ${debrief} Habitat environmental systems operating at ${newTemp}°C with ${newIntegrity}% structural integrity.`,
+        resourceSummary: {
+          o2: newO2,
+          water: newWater,
+          power: newBattery,
+          temp: newTemp,
+          integrity: newIntegrity,
+        },
+        playerActionTaken: `O₂: ${state.o2Mode} | Water: ${state.waterRecyclerMode} | Ration: ${state.waterRation}`,
+        scientificLearningPoint: event.scientificConcept,
+        outcomeStatus,
         scienceTip: event.tip,
-        badge: nextSol === 30 ? {
-          name: 'Senior Astronaut 30-Sol Wings',
-          icon: 'Award',
-          description: 'Mastered all 30 Sols of habitat survival on a foreign planetary world!',
-        } : (nextSol === 15 ? {
-          name: 'Halfway Pioneer Pin',
-          icon: 'Rocket',
-          description: 'Successfully reached Sol 15 with nominal life-support reserves.',
-        } : undefined),
+        badge: badgeInfo,
       };
 
       onJournalAdd(newJournalEntry);
     }
-  }, [state, calculations, destination, onJournalAdd]);
+  }, [state, calculations, destination, onJournalAdd, onAchievementUnlock]);
 
   // Reset restores every initial value correctly according to the active destination
   const resetSimulation = useCallback(() => {

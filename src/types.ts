@@ -1,6 +1,8 @@
-export type NavTab = 'home' | 'missions' | 'journal' | 'settings';
+export type NavTab = 'home' | 'missions' | 'habitat' | 'exploration' | 'journal' | 'achievements' | 'settings';
 
 export type Destination = 'moon' | 'mars';
+
+export type MissionStatus = 'active' | 'victory' | 'critical';
 
 export interface MissionInfo {
   id: Destination;
@@ -40,16 +42,20 @@ export interface PowerAllocation {
 export interface SolDailyEvent {
   title: string;
   description: string;
-  solarModifier: number; // multiplier on solar, e.g. 0.7 during dust
-  thermalModifierKw: number; // extra kW needed if cold
-  dustAccumulation: number; // deterministic % dust added on this Sol
-  tip: string;
+  scenario: string; // Educational scenario
+  scientificConcept: string; // Real scientific concept
+  recommendedAction: string; // Recommended player strategy
+  decisionImpact: string; // What will happen
+  solarModifier: number; // Multiplier on solar, e.g. 0.7 during dust
+  thermalModifierKw: number; // Extra kW needed if cold
+  dustAccumulation: number; // Deterministic % dust added on this Sol
+  tip: string; // NOVA tip
 }
 
 export interface HabitatSimulationState {
   currentSol: number;
   totalSols: number;
-  missionStatus: 'active' | 'victory' | 'critical';
+  missionStatus: MissionStatus;
   
   // 1. Oxygen Subsystem
   oxygenLevel: number; // 0 - 100 %
@@ -101,12 +107,48 @@ export interface JournalEntry {
   author: string;
   timestamp: string;
   body: string;
+  resourceSummary?: {
+    o2: number;
+    water: number;
+    power: number;
+    temp: number;
+    integrity: number;
+  };
+  playerActionTaken?: string;
+  scientificLearningPoint?: string;
+  outcomeStatus?: 'nominal' | 'warning' | 'critical' | 'victory';
   badge?: {
     name: string;
     icon: string;
     description: string;
   };
   scienceTip: string;
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: 'survival' | 'engineering' | 'exploration' | 'milestone';
+  icon: string;
+  unlocked: boolean;
+  unlockedAtSol?: number;
+  criteria: string;
+  educationalFact: string;
+}
+
+export interface ExplorationPoint {
+  id: string;
+  destination: Destination;
+  title: string;
+  subtitle: string;
+  coordinates: string;
+  description: string;
+  scientificSignificance: string;
+  nasaConnection: string;
+  interactiveFact: string;
+  badgeName?: string;
+  icon: string;
 }
 
 export interface SettingsConfig {

@@ -15,6 +15,9 @@ import {
   FlaskConical,
   Award,
   Thermometer,
+  ChevronDown,
+  ChevronUp,
+  Activity,
 } from 'lucide-react';
 import {
   Destination,
@@ -60,7 +63,7 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
   onAdvanceSol,
   onResetSimulation,
 }) => {
-  const [activeSystemTab, setActiveSystemTab] = useState<'o2' | 'water' | 'power'>('o2');
+  const [activeSubsystem, setActiveSubsystem] = useState<'o2' | 'water' | 'power' | null>('o2');
   const isMars = destination === 'mars';
 
   const isSol30 = state.currentSol >= state.totalSols;
@@ -68,8 +71,12 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
   // Bug 2 Fix: Show victory ONLY when missionStatus === 'victory' and never when critical
   const isMissionVictory = state.missionStatus === 'victory' && !isMissionCritical;
 
+  const toggleSubsystem = (subsystem: 'o2' | 'water' | 'power') => {
+    setActiveSubsystem(activeSubsystem === subsystem ? null : subsystem);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn pb-12">
       
       {/* Sol Mission Controller Banner */}
       <div className="p-6 rounded-3xl border-2 border-cyan-500/40 bg-gradient-to-r from-[#071330]/95 via-[#0A1D47]/95 to-[#05112B]/95 shadow-2xl backdrop-blur-xl">
@@ -127,7 +134,7 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
             )}
 
             {/* 2. Victory State */}
-            {isMissionVictory && !isMissionCritical && (
+            {isMissionVictory && (
               <div className="px-5 py-3 rounded-2xl bg-emerald-600/30 border border-emerald-400 text-emerald-200 font-bold text-xs sm:text-sm flex items-center space-x-2">
                 <Award className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <span>Mission Completed! 30 Sols Survived!</span>
@@ -165,7 +172,7 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
         {/* 30-Sol Visual Progress Tracker */}
         <div className="mt-5 pt-4 border-t border-slate-800/80 space-y-1.5">
           <div className="flex justify-between text-[11px] font-mono text-slate-400">
-            <span>Sol 1 (Landing)</span>
+            <span>Sol 1 (Touchdown)</span>
             <span className="text-cyan-300 font-bold">Progress: {Math.round((state.currentSol / state.totalSols) * 100)}%</span>
             <span>Sol 30 (Mission Wings)</span>
           </div>
@@ -197,488 +204,432 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
         </div>
       )}
 
-      {/* Primary Subsystem Selector Tabs */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* ================= FOUR PRIMARY RESOURCE CARDS ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Oxygen Tab Button */}
-        <button
-          onClick={() => setActiveSystemTab('o2')}
-          className={`p-4 rounded-2xl border-2 transition-all flex flex-col sm:flex-row items-center justify-between text-left cursor-pointer ${
-            activeSystemTab === 'o2'
-              ? 'border-cyan-400 bg-cyan-950/60 shadow-lg shadow-cyan-950/60'
-              : 'border-slate-800 bg-[#070F2B]/80 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-500/50 flex items-center justify-center text-cyan-300">
-              <Wind className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[10px] font-mono uppercase text-slate-400">Subsystem 01</div>
-              <div className="text-sm font-bold text-white">Oxygen (O₂)</div>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-0 text-right">
-            <div className={`text-base font-black ${state.oxygenLevel < 30 ? 'text-red-400 animate-pulse' : 'text-cyan-300'}`}>
-              {state.oxygenLevel}%
-            </div>
-            <div className="text-[10px] font-mono text-slate-400">
-              {calculations.o2Delta >= 0 ? `+${calculations.o2Delta}%/Sol` : `${calculations.o2Delta}%/Sol`}
-            </div>
-          </div>
-        </button>
-
-        {/* Water Tab Button */}
-        <button
-          onClick={() => setActiveSystemTab('water')}
-          className={`p-4 rounded-2xl border-2 transition-all flex flex-col sm:flex-row items-center justify-between text-left cursor-pointer ${
-            activeSystemTab === 'water'
-              ? 'border-blue-400 bg-blue-950/60 shadow-lg shadow-blue-950/60'
-              : 'border-slate-800 bg-[#070F2B]/80 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-950 border border-blue-500/50 flex items-center justify-center text-blue-300">
-              <Droplets className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[10px] font-mono uppercase text-slate-400">Subsystem 02</div>
-              <div className="text-sm font-bold text-white">Water (H₂O)</div>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-0 text-right">
-            <div className={`text-base font-black ${state.waterLevel < 30 ? 'text-red-400 animate-pulse' : 'text-blue-300'}`}>
-              {state.waterLevel}%
-            </div>
-            <div className="text-[10px] font-mono text-slate-400">
-              {calculations.waterDelta >= 0 ? `+${calculations.waterDelta}%/Sol` : `${calculations.waterDelta}%/Sol`}
-            </div>
-          </div>
-        </button>
-
-        {/* Electrical Power Tab Button */}
-        <button
-          onClick={() => setActiveSystemTab('power')}
-          className={`p-4 rounded-2xl border-2 transition-all flex flex-col sm:flex-row items-center justify-between text-left cursor-pointer ${
-            activeSystemTab === 'power'
-              ? 'border-amber-400 bg-amber-950/60 shadow-lg shadow-amber-950/60'
-              : 'border-slate-800 bg-[#070F2B]/80 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-950 border border-amber-500/50 flex items-center justify-center text-amber-300">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[10px] font-mono uppercase text-slate-400">Subsystem 03</div>
-              <div className="text-sm font-bold text-white">Power &amp; Solar</div>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-0 text-right">
-            <div className={`text-base font-black ${state.batteryCharge < 25 ? 'text-red-400 animate-pulse' : 'text-amber-300'}`}>
-              {state.batteryCharge}%
-            </div>
-            <div className="text-[10px] font-mono text-slate-400">
-              {calculations.netPowerKw >= 0 ? `+${calculations.netPowerKw} kW` : `${calculations.netPowerKw} kW`}
-            </div>
-          </div>
-        </button>
-
-      </div>
-
-      {/* Subsystem Details & Gameplay Controls Panel */}
-      <div className="p-6 rounded-3xl border border-slate-800 bg-[#070F2B]/90 backdrop-blur-xl shadow-xl">
-        
-        {/* ================= 1. OXYGEN CONTROLS ================= */}
-        {activeSystemTab === 'o2' && (
-          <div className="space-y-6">
-            
-            {/* Header info */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <Wind className="w-5 h-5 text-cyan-400" />
-                  <h4 className="text-lg font-bold text-white">Habitat Atmospheric Oxygen Generation</h4>
+        {/* Card 1: Oxygen */}
+        <div className="p-5 rounded-3xl bg-[#070F2B]/90 border border-slate-800 backdrop-blur-xl flex flex-col justify-between space-y-4 shadow-xl">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
+                  <Wind className="w-4 h-4" />
                 </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  {isMars
-                    ? 'Using MOXIE solid-oxide electrolysis to split Martian CO₂ into breathable Oxygen.'
-                    : 'Using water electrolysis and lunar regolith mineral extraction to sustain 21% O₂ partial pressure.'}
-                </p>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Primary Gas</div>
+                  <h4 className="text-sm font-bold text-white">Oxygen (O₂)</h4>
+                </div>
               </div>
-
-              {/* Emergency Canister Action */}
-              <button
-                onClick={onUseEmergencyO2}
-                disabled={state.emergencyO2Canisters <= 0 || isMissionCritical}
-                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 transition-all ${
-                  state.emergencyO2Canisters > 0 && !isMissionCritical
-                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md shadow-cyan-600/30 cursor-pointer'
-                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Inject Backup O₂ ({state.emergencyO2Canisters} left)</span>
-              </button>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                state.oxygenLevel > 70
+                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-800'
+                  : state.oxygenLevel > 30
+                  ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                  : 'bg-red-950 text-red-300 border border-red-700 animate-pulse'
+              }`}>
+                {state.oxygenLevel > 70 ? 'NOMINAL' : state.oxygenLevel > 30 ? 'CAUTION' : 'CRITICAL'}
+              </span>
             </div>
 
-            {/* Visual Gauge Bar */}
-            <div className="space-y-2">
+            {/* Gauge */}
+            <div className="space-y-1">
               <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-400">Habitat Atmosphere O₂ Tank:</span>
-                <span className="text-cyan-300 font-bold">{state.oxygenLevel}% (Nominal: &gt; 80%)</span>
+                <span className="text-slate-400">Atmosphere Tank</span>
+                <span className="text-cyan-300 font-bold">{state.oxygenLevel}%</span>
               </div>
-              <div className="w-full h-4 rounded-full bg-slate-950 border border-slate-800 overflow-hidden p-0.5">
+              <div className="w-full h-2.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    state.oxygenLevel > 70
-                      ? 'bg-cyan-400'
-                      : state.oxygenLevel > 35
-                      ? 'bg-amber-400'
-                      : 'bg-red-500 animate-pulse'
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    state.oxygenLevel > 70 ? 'bg-cyan-400' : state.oxygenLevel > 30 ? 'bg-amber-400' : 'bg-red-500'
                   }`}
                   style={{ width: `${state.oxygenLevel}%` }}
                 />
               </div>
+              <div className="text-[10px] font-mono text-slate-400 text-right">
+                Net Delta: {calculations.o2Delta >= 0 ? `+${calculations.o2Delta}%/Sol` : `${calculations.o2Delta}%/Sol`}
+              </div>
             </div>
 
-            {/* Gameplay Decision: Oxygen Flow Mode */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-mono uppercase text-cyan-300 font-bold tracking-wider">
-                Select Oxygen Flow &amp; Production Setting:
-              </label>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              {isMars ? 'MOXIE cracks atmospheric CO₂.' : 'Electrolysis splits water into breathable air.'}
+            </p>
+          </div>
 
+          <div className="space-y-2 pt-2 border-t border-slate-800/80">
+            <button
+              onClick={onUseEmergencyO2}
+              disabled={state.emergencyO2Canisters <= 0 || isMissionCritical}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-mono font-bold flex items-center justify-center space-x-1.5 transition-colors ${
+                state.emergencyO2Canisters > 0 && !isMissionCritical
+                  ? 'bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer'
+                  : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Emergency O₂ (+25%) [{state.emergencyO2Canisters}]</span>
+            </button>
+
+            <button
+              onClick={() => toggleSubsystem('o2')}
+              className="w-full py-1.5 text-[11px] font-mono text-cyan-300 hover:text-white flex items-center justify-center space-x-1 cursor-pointer"
+            >
+              <span>Subsystem Settings</span>
+              {activeSubsystem === 'o2' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Card 2: Water */}
+        <div className="p-5 rounded-3xl bg-[#070F2B]/90 border border-slate-800 backdrop-blur-xl flex flex-col justify-between space-y-4 shadow-xl">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-950/80 border border-blue-400/40 flex items-center justify-center text-blue-300">
+                  <Droplets className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Potable Fluid</div>
+                  <h4 className="text-sm font-bold text-white">Water (H₂O)</h4>
+                </div>
+              </div>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                state.waterLevel > 70
+                  ? 'bg-blue-950 text-blue-300 border border-blue-800'
+                  : state.waterLevel > 30
+                  ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                  : 'bg-red-950 text-red-300 border border-red-700 animate-pulse'
+              }`}>
+                {state.waterLevel > 70 ? 'NOMINAL' : state.waterLevel > 30 ? 'CAUTION' : 'CRITICAL'}
+              </span>
+            </div>
+
+            {/* Gauge */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-slate-400">Purified Storage</span>
+                <span className="text-blue-300 font-bold">{state.waterLevel}%</span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    state.waterLevel > 70 ? 'bg-blue-400' : state.waterLevel > 30 ? 'bg-amber-400' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${state.waterLevel}%` }}
+                />
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 text-right">
+                Net Delta: {calculations.waterDelta >= 0 ? `+${calculations.waterDelta}%/Sol` : `${calculations.waterDelta}%/Sol`}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              ECLSS closed-loop recyclers recover 92% of graywater &amp; humidity.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-slate-800/80">
+            <button
+              onClick={onToggleIceSmelting}
+              disabled={isMissionCritical}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-mono font-bold flex items-center justify-center space-x-1.5 transition-colors ${
+                state.iceSmeltingActive
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer'
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5 text-amber-300" />
+              <span>Ice Smelter: {state.iceSmeltingActive ? 'ON (+7%)' : 'OFF'}</span>
+            </button>
+
+            <button
+              onClick={() => toggleSubsystem('water')}
+              className="w-full py-1.5 text-[11px] font-mono text-blue-300 hover:text-white flex items-center justify-center space-x-1 cursor-pointer"
+            >
+              <span>Subsystem Settings</span>
+              {activeSubsystem === 'water' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Card 3: Power */}
+        <div className="p-5 rounded-3xl bg-[#070F2B]/90 border border-slate-800 backdrop-blur-xl flex flex-col justify-between space-y-4 shadow-xl">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-400/40 flex items-center justify-center text-amber-300">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Energy Grid</div>
+                  <h4 className="text-sm font-bold text-white">Power &amp; Battery</h4>
+                </div>
+              </div>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                state.batteryCharge > 60
+                  ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                  : state.batteryCharge > 25
+                  ? 'bg-amber-950 text-amber-400 border border-amber-800'
+                  : 'bg-red-950 text-red-300 border border-red-700 animate-pulse'
+              }`}>
+                {calculations.netPowerKw >= 0 ? 'CHARGING' : 'DRAINING'}
+              </span>
+            </div>
+
+            {/* Gauge */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-slate-400">Battery Bank</span>
+                <span className="text-amber-300 font-bold">{state.batteryCharge}%</span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    state.batteryCharge > 60 ? 'bg-amber-400' : state.batteryCharge > 25 ? 'bg-amber-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${state.batteryCharge}%` }}
+                />
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 text-right">
+                Net Flow: {calculations.netPowerKw >= 0 ? `+${calculations.netPowerKw} kW` : `${calculations.netPowerKw} kW`}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Solar Gen: {calculations.powerGenerated} kW • Demand: {calculations.totalDemand} kW.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-slate-800/80">
+            <button
+              onClick={onCleanSolarPanels}
+              disabled={isMissionCritical}
+              className="w-full py-2 px-3 rounded-xl text-xs font-mono font-bold flex items-center justify-center space-x-1.5 bg-amber-600 hover:bg-amber-500 text-white transition-colors cursor-pointer"
+            >
+              <Brush className="w-3.5 h-3.5" />
+              <span>Clean Dust Wipers ({state.solarDustAccumulation}%)</span>
+            </button>
+
+            <button
+              onClick={() => toggleSubsystem('power')}
+              className="w-full py-1.5 text-[11px] font-mono text-amber-300 hover:text-white flex items-center justify-center space-x-1 cursor-pointer"
+            >
+              <span>Subsystem Settings</span>
+              {activeSubsystem === 'power' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Card 4: Temperature & Integrity */}
+        <div className="p-5 rounded-3xl bg-[#070F2B]/90 border border-slate-800 backdrop-blur-xl flex flex-col justify-between space-y-4 shadow-xl">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-950/80 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
+                  <Thermometer className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Environment</div>
+                  <h4 className="text-sm font-bold text-white">Habitat &amp; Hull</h4>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                {state.habitatTempC >= 18 ? 'NOMINAL' : 'COLD STRESS'}
+              </span>
+            </div>
+
+            {/* Gauge */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-slate-400">Structural Integrity</span>
+                <span className="text-emerald-300 font-bold">{state.habitatIntegrity}%</span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-950 border border-slate-800 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+                  style={{ width: `${state.habitatIntegrity}%` }}
+                />
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 text-right">
+                Interior Temp: {state.habitatTempC}°C
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Thermal heating units regulate temperature against harsh space cold.
+            </p>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-slate-800/80">
+            <div className="w-full py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-300 flex items-center justify-between">
+              <span>Heating Status:</span>
+              <span className={`font-bold ${state.powerAllocation.thermalRegulation ? 'text-emerald-400' : 'text-red-400'}`}>
+                {state.powerAllocation.thermalRegulation ? 'POWERED (21°C)' : 'UNPOWERED'}
+              </span>
+            </div>
+
+            <button
+              onClick={() => toggleSubsystem('power')}
+              className="w-full py-1.5 text-[11px] font-mono text-emerald-300 hover:text-white flex items-center justify-center space-x-1 cursor-pointer"
+            >
+              <span>Manage Thermal Grid</span>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ================= EXPANDABLE SUBSYSTEM PANELS ================= */}
+      {activeSubsystem && (
+        <div className="p-6 rounded-3xl border border-slate-800 bg-[#070F2B]/95 backdrop-blur-xl shadow-2xl space-y-5 animate-fadeIn">
+          
+          {/* Subsystem Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center space-x-2.5">
+              <Activity className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-base font-bold text-white uppercase font-mono tracking-wider">
+                Advanced {activeSubsystem === 'o2' ? 'Oxygen Production' : activeSubsystem === 'water' ? 'ECLSS Water Recycling' : 'Electrical Grid Matrix'} Controls
+              </h3>
+            </div>
+            <button
+              onClick={() => setActiveSubsystem(null)}
+              className="text-xs font-mono text-slate-400 hover:text-white cursor-pointer"
+            >
+              Close Panel [X]
+            </button>
+          </div>
+
+          {/* OXYGEN SUBSYSTEM */}
+          {activeSubsystem === 'o2' && (
+            <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Eco Mode */}
                 <div
                   onClick={() => !isMissionCritical && onSetO2Mode('eco')}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.o2Mode === 'eco'
-                      ? 'border-cyan-400 bg-cyan-950/50 shadow-md'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    state.o2Mode === 'eco' ? 'border-cyan-400 bg-cyan-950/50 shadow-md' : 'border-slate-800 bg-slate-900/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white mb-1">
                     <span>Eco-Conservation</span>
                     {state.o2Mode === 'eco' && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
                   </div>
-                  <div className="text-[11px] text-cyan-300 font-mono mb-2">Demand: 15 kW • Net: -2%/Sol</div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Saves precious battery power during dust storms. Crew breathes slightly cooler, conserved air.
-                  </p>
+                  <div className="text-[11px] text-cyan-300 font-mono mb-1.5">Demand: 15 kW • Net: -2%/Sol</div>
+                  <p className="text-[11px] text-slate-400">Saves power during dust storms. Crew breathes slightly conserved air.</p>
                 </div>
 
-                {/* Standard Mode */}
                 <div
                   onClick={() => !isMissionCritical && onSetO2Mode('standard')}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.o2Mode === 'standard'
-                      ? 'border-cyan-400 bg-cyan-950/50 shadow-md'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    state.o2Mode === 'standard' ? 'border-cyan-400 bg-cyan-950/50 shadow-md' : 'border-slate-800 bg-slate-900/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white mb-1">
                     <span>Standard Mode</span>
                     {state.o2Mode === 'standard' && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
                   </div>
-                  <div className="text-[11px] text-emerald-300 font-mono mb-2">Demand: 25 kW • Net: +1%/Sol</div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Balanced closed-loop recycling. Replenishes oxygen slightly faster than normal human metabolism.
-                  </p>
+                  <div className="text-[11px] text-emerald-300 font-mono mb-1.5">Demand: 25 kW • Net: +1%/Sol</div>
+                  <p className="text-[11px] text-slate-400">Balanced closed-loop recycling. Replenishes oxygen at nominal metabolic pace.</p>
                 </div>
 
-                {/* Boost Mode */}
                 <div
                   onClick={() => !isMissionCritical && onSetO2Mode('boost')}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.o2Mode === 'boost'
-                      ? 'border-cyan-400 bg-cyan-950/50 shadow-md'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    state.o2Mode === 'boost' ? 'border-cyan-400 bg-cyan-950/50 shadow-md' : 'border-slate-800 bg-slate-900/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white mb-1">
                     <span>Max Boost Mode</span>
                     {state.o2Mode === 'boost' && <CheckCircle2 className="w-4 h-4 text-cyan-400" />}
                   </div>
-                  <div className="text-[11px] text-amber-300 font-mono mb-2">Demand: 35 kW • Net: +5%/Sol</div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Runs compressors at full speed to rapidly refill reserve tanks. Requires heavy electrical power.
-                  </p>
+                  <div className="text-[11px] text-amber-300 font-mono mb-1.5">Demand: 35 kW • Net: +5%/Sol</div>
+                  <p className="text-[11px] text-slate-400">Runs compressors at peak capacity to rapidly refill reserve tanks.</p>
                 </div>
               </div>
-            </div>
 
-            {/* Diagnostic Scrubber Status */}
-            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs font-mono text-slate-300">
-              <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>CO₂ Scrubbers (Lithium Hydroxide Canisters): {state.o2ScrubberEfficiency}% Efficient</span>
-              </div>
-              <span className="text-emerald-400 font-bold">ONLINE</span>
-            </div>
-
-          </div>
-        )}
-
-        {/* ================= 2. WATER CONTROLS ================= */}
-        {activeSystemTab === 'water' && (
-          <div className="space-y-6">
-            
-            {/* Header info */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
-              <div>
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between text-xs font-mono text-slate-300">
                 <div className="flex items-center space-x-2">
-                  <Droplets className="w-5 h-5 text-blue-400" />
-                  <h4 className="text-lg font-bold text-white">ECLSS Water Recycling &amp; Hydration</h4>
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>CO₂ Scrubbers (Lithium Hydroxide Canisters): {state.o2ScrubberEfficiency}% Efficient</span>
                 </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  NASA Environmental Control and Life Support System (ECLSS) recovers moisture from air, showers, and hygiene systems.
-                </p>
-              </div>
-
-              {/* Subsurface Ice Smelter Toggle */}
-              <button
-                onClick={onToggleIceSmelting}
-                disabled={isMissionCritical}
-                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 transition-all ${
-                  isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                } ${
-                  state.iceSmeltingActive
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                }`}
-              >
-                <Flame className="w-3.5 h-3.5 text-amber-300" />
-                <span>Ice Smelter: {state.iceSmeltingActive ? 'MELTING ON' : 'OFF'} ({state.iceReservesKg} kg stored)</span>
-              </button>
-            </div>
-
-            {/* Visual Gauge Bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-400">Total Potable Water Storage:</span>
-                <span className="text-blue-300 font-bold">{state.waterLevel}% (Nominal: &gt; 80%)</span>
-              </div>
-              <div className="w-full h-4 rounded-full bg-slate-950 border border-slate-800 overflow-hidden p-0.5">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    state.waterLevel > 70
-                      ? 'bg-blue-400'
-                      : state.waterLevel > 35
-                      ? 'bg-amber-400'
-                      : 'bg-red-500 animate-pulse'
-                  }`}
-                  style={{ width: `${state.waterLevel}%` }}
-                />
+                <span className="text-emerald-400 font-bold">ONLINE</span>
               </div>
             </div>
+          )}
 
-            {/* Gameplay Decision: Recycler Mode */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-mono uppercase text-blue-300 font-bold tracking-wider">
-                Water Recycler Filtration Level:
-              </label>
-
+          {/* WATER SUBSYSTEM */}
+          {activeSubsystem === 'water' && (
+            <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Basic Recycler */}
                 <div
                   onClick={() => !isMissionCritical && onSetWaterRecyclerMode('basic')}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.waterRecyclerMode === 'basic'
-                      ? 'border-blue-400 bg-blue-950/50 shadow-md'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    state.waterRecyclerMode === 'basic' ? 'border-blue-400 bg-blue-950/50 shadow-md' : 'border-slate-800 bg-slate-900/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white mb-1">
                     <span>Basic Recycler</span>
                     {state.waterRecyclerMode === 'basic' && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
                   </div>
-                  <div className="text-[11px] text-cyan-300 font-mono mb-2">Demand: 10 kW • 75% Recovery</div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Uses low electrical power. Good when solar array is experiencing dust storms.
-                  </p>
+                  <div className="text-[11px] text-cyan-300 font-mono mb-1.5">Demand: 10 kW • 75% Recovery</div>
+                  <p className="text-[11px] text-slate-400">Uses low power. Recommended when solar collection is reduced by dust.</p>
                 </div>
 
-                {/* Advanced Recycler */}
                 <div
                   onClick={() => !isMissionCritical && onSetWaterRecyclerMode('advanced')}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.waterRecyclerMode === 'advanced'
-                      ? 'border-blue-400 bg-blue-950/50 shadow-md'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    state.waterRecyclerMode === 'advanced' ? 'border-blue-400 bg-blue-950/50 shadow-md' : 'border-slate-800 bg-slate-900/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white mb-1">
                     <span>Advanced Catalytic</span>
                     {state.waterRecyclerMode === 'advanced' && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
                   </div>
-                  <div className="text-[11px] text-emerald-300 font-mono mb-2">Demand: 20 kW • 92% Recovery</div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    NASA standard closed loop. Multi-stage filtration ensures ultra-clean water.
-                  </p>
+                  <div className="text-[11px] text-emerald-300 font-mono mb-1.5">Demand: 20 kW • 92% Recovery</div>
+                  <p className="text-[11px] text-slate-400">NASA standard closed loop. Multi-stage filtration guarantees ultra-clean water.</p>
                 </div>
 
-                {/* Hyper Filtration */}
                 <div
                   onClick={() => !isMissionCritical && onSetWaterRecyclerMode('hyper')}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.waterRecyclerMode === 'hyper'
-                      ? 'border-blue-400 bg-blue-950/50 shadow-md'
-                      : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    state.waterRecyclerMode === 'hyper' ? 'border-blue-400 bg-blue-950/50 shadow-md' : 'border-slate-800 bg-slate-900/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white mb-1">
                     <span>Hyper Vapor-Filter</span>
                     {state.waterRecyclerMode === 'hyper' && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
                   </div>
-                  <div className="text-[11px] text-amber-300 font-mono mb-2">Demand: 30 kW • 98% Recovery</div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Recovers nearly 100% of all moisture in the habitat. Highly recommended if water tanks are low.
-                  </p>
+                  <div className="text-[11px] text-amber-300 font-mono mb-1.5">Demand: 30 kW • 98% Recovery</div>
+                  <p className="text-[11px] text-slate-400">Recovers virtually 100% of all moisture in the habitat.</p>
                 </div>
               </div>
-            </div>
 
-            {/* Crew Rationing Options */}
-            <div className="space-y-2 pt-2">
-              <label className="text-xs font-mono uppercase text-blue-300 font-bold tracking-wider">
-                Crew Hydration &amp; Food Rationing Policy:
-              </label>
-
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 pt-2">
+                <span className="text-xs font-mono text-slate-400 self-center mr-2">Crew Rationing:</span>
                 {(['strict', 'standard', 'generous'] as WaterRation[]).map((ration) => (
                   <button
                     key={ration}
                     onClick={() => !isMissionCritical && onSetWaterRation(ration)}
-                    disabled={isMissionCritical}
-                    className={`px-4 py-2 rounded-xl text-xs font-mono font-bold capitalize transition-colors ${
-                      isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                    } ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold capitalize transition-colors cursor-pointer ${
                       state.waterRation === ration
                         ? 'bg-blue-600 text-white'
                         : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
                     }`}
                   >
-                    {ration} Rationing ({ration === 'strict' ? '-5%/Sol' : ration === 'standard' ? '-8%/Sol' : '-12%/Sol'})
+                    {ration} ({ration === 'strict' ? '-5%/Sol' : ration === 'standard' ? '-8%/Sol' : '-12%/Sol'})
                   </button>
                 ))}
               </div>
             </div>
+          )}
 
-          </div>
-        )}
-
-        {/* ================= 3. ELECTRICAL POWER CONTROLS ================= */}
-        {activeSystemTab === 'power' && (
-          <div className="space-y-6">
-            
-            {/* Header info */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <Zap className="w-5 h-5 text-amber-400" />
-                  <h4 className="text-lg font-bold text-white">Electrical Grid &amp; Photovoltaic Storage</h4>
-                </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  Solar tracking arrays generate electricity by day; lithium-metal batteries supply power during shadow passes.
-                </p>
-              </div>
-
-              {/* Clean Solar Dust Action */}
-              <button
-                onClick={onCleanSolarPanels}
-                disabled={isMissionCritical}
-                className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center space-x-2 bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-600/30 transition-all ${
-                  isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                }`}
-              >
-                <Brush className="w-3.5 h-3.5" />
-                <span>Clean Solar Dust Wipers ({state.solarDustAccumulation}% dust)</span>
-              </button>
-            </div>
-
-            {/* Power Flow Telemetry Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
-                <div className="text-[10px] font-mono uppercase text-slate-400">Solar Generation</div>
-                <div className="text-xl font-black text-amber-300 mt-0.5">
-                  {calculations.powerGenerated} kW
-                </div>
-                <div className="text-[11px] font-mono text-slate-400 mt-1">
-                  Sun Modifier: {Math.round(state.currentEvent.solarModifier * 100)}%
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
-                <div className="text-[10px] font-mono uppercase text-slate-400">Total System Demand</div>
-                <div className="text-xl font-black text-white mt-0.5">
-                  {calculations.totalDemand} kW
-                </div>
-                <div className="text-[11px] font-mono text-slate-400 mt-1">
-                  Active Subsystems: 5 online
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
-                <div className="text-[10px] font-mono uppercase text-slate-400">Battery Net Flow</div>
-                <div className={`text-xl font-black mt-0.5 ${calculations.netPowerKw >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {calculations.netPowerKw >= 0 ? `+${calculations.netPowerKw} kW (Charging)` : `${calculations.netPowerKw} kW (Draining)`}
-                </div>
-                <div className="text-[11px] font-mono text-slate-400 mt-1">
-                  Battery Reserves: {state.batteryCharge}%
-                </div>
-              </div>
-            </div>
-
-            {/* Battery Level Visual Bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-400">Habitat Central Battery Charge:</span>
-                <span className="text-amber-300 font-bold">{state.batteryCharge}%</span>
-              </div>
-              <div className="w-full h-4 rounded-full bg-slate-950 border border-slate-800 overflow-hidden p-0.5">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    state.batteryCharge > 60
-                      ? 'bg-amber-400'
-                      : state.batteryCharge > 25
-                      ? 'bg-amber-500'
-                      : 'bg-red-500 animate-pulse'
-                  }`}
-                  style={{ width: `${state.batteryCharge}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Power Allocation Matrix Switches */}
-            <div className="space-y-3 pt-2">
-              <label className="text-xs font-mono uppercase text-amber-300 font-bold tracking-wider">
-                Subsystem Power Allocation Switches:
-              </label>
-
+          {/* POWER SUBSYSTEM */}
+          {activeSubsystem === 'power' && (
+            <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-mono">
-                
-                {/* O2 switch */}
                 <div
                   onClick={() => !isMissionCritical && onTogglePowerAllocation('lifeSupportO2')}
-                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.powerAllocation.lifeSupportO2
-                      ? 'bg-blue-950/60 border-cyan-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
+                    state.powerAllocation.lifeSupportO2 ? 'bg-blue-950/60 border-cyan-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -690,15 +641,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                   </span>
                 </div>
 
-                {/* Water Recycling switch */}
                 <div
                   onClick={() => !isMissionCritical && onTogglePowerAllocation('waterRecycling')}
-                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.powerAllocation.waterRecycling
-                      ? 'bg-blue-950/60 border-blue-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
+                    state.powerAllocation.waterRecycling ? 'bg-blue-950/60 border-blue-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -710,15 +656,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                   </span>
                 </div>
 
-                {/* Thermal Heating switch */}
                 <div
                   onClick={() => !isMissionCritical && onTogglePowerAllocation('thermalRegulation')}
-                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.powerAllocation.thermalRegulation
-                      ? 'bg-blue-950/60 border-amber-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
+                    state.powerAllocation.thermalRegulation ? 'bg-blue-950/60 border-amber-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -730,15 +671,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                   </span>
                 </div>
 
-                {/* Science Lab switch */}
                 <div
                   onClick={() => !isMissionCritical && onTogglePowerAllocation('scienceLab')}
-                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.powerAllocation.scienceLab
-                      ? 'bg-blue-950/60 border-purple-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
+                    state.powerAllocation.scienceLab ? 'bg-blue-950/60 border-purple-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -750,15 +686,10 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                   </span>
                 </div>
 
-                {/* Comms switch */}
                 <div
                   onClick={() => !isMissionCritical && onTogglePowerAllocation('communications')}
-                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors ${
-                    isMissionCritical ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${
-                    state.powerAllocation.communications
-                      ? 'bg-blue-950/60 border-emerald-500 text-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  className={`p-3.5 rounded-xl border flex items-center justify-between transition-colors cursor-pointer ${
+                    state.powerAllocation.communications ? 'bg-blue-950/60 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-500'
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -769,14 +700,12 @@ export const HabitatControlDeck: React.FC<HabitatControlDeckProps> = ({
                     {state.powerAllocation.communications ? 'ON' : 'OFF'}
                   </span>
                 </div>
-
               </div>
             </div>
+          )}
 
-          </div>
-        )}
-
-      </div>
+        </div>
+      )}
 
       {/* Sol Debrief Message Banner */}
       <div className="p-4 rounded-2xl bg-[#091533]/80 border border-blue-900/60 flex items-start space-x-3 text-xs text-slate-200 shadow-md">

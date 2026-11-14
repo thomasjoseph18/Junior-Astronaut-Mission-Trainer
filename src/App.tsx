@@ -6,10 +6,14 @@ import { NovaCompanion } from './components/NovaCompanion';
 import { TestScene } from './components/TestScene';
 import { WelcomeView } from './components/views/WelcomeView';
 import { MissionSelectView } from './components/views/MissionSelectView';
+import { HabitatControlDeck } from './components/simulation/HabitatControlDeck';
+import { ExplorationView } from './components/views/ExplorationView';
 import { JournalView } from './components/views/JournalView';
+import { AchievementsView } from './components/views/AchievementsView';
 import { SettingsView } from './components/views/SettingsView';
-import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry } from './types';
+import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry, Achievement } from './types';
 import { getInitialJournal } from './data/missions';
+import { INITIAL_ACHIEVEMENTS } from './data/achievements';
 import { useHabitatSimulation } from './hooks/useHabitatSimulation';
 
 export function App() {
@@ -25,6 +29,44 @@ export function App() {
     lowPerformanceMode: false,
   });
 
+  // Track player merits & badges
+  const [achievements, setAchievements] = useState<Achievement[]>(() => {
+    try {
+      const saved = localStorage.getItem('buildscapes_achievements');
+      if (saved) {
+        const parsed: Achievement[] = JSON.parse(saved);
+        return INITIAL_ACHIEVEMENTS.map((init) => {
+          const match = parsed.find((p) => p.id === init.id);
+          return match
+            ? { ...init, unlocked: match.unlocked, unlockedAtSol: match.unlockedAtSol }
+            : init;
+        });
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_ACHIEVEMENTS;
+  });
+
+  // Callback to unlock an achievement with persistence and deduplication
+  const handleUnlockAchievement = useCallback((id: string, atSol?: number) => {
+    setAchievements((prev) => {
+      const match = prev.find((a) => a.id === id);
+      if (match && match.unlocked) return prev;
+      const next = prev.map((a) =>
+        a.id === id
+          ? { ...a, unlocked: true, unlockedAtSol: atSol || a.unlockedAtSol || 1 }
+          : a
+      );
+      try {
+        localStorage.setItem('buildscapes_achievements', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
+
   // Callback when simulation triggers a daily journal entry (guarantees zero duplicate entries)
   const handleDailyJournalEntry = useCallback((entry: JournalEntry) => {
     setJournalEntries((prev) => {
@@ -36,7 +78,7 @@ export function App() {
   }, []);
 
   // Initialize Habitat 30-Sol Resource Simulation Engine
-  const simulation = useHabitatSimulation(destination, handleDailyJournalEntry);
+  const simulation = useHabitatSimulation(destination, handleDailyJournalEntry, handleUnlockAchievement);
 
   const handleUpdateSettings = (newSettings: Partial<SettingsConfig>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -91,7 +133,7 @@ export function App() {
         </Canvas>
       </div>
 
-      {/* NASA Top Navigation Bar */}
+      {/* NASA Top Navigation Bar (7 Tabs: Home, Missions, Habitat, Exploration, Journal, Achievements, Settings) */}
       <Navbar
         currentTab={currentTab}
         onTabChange={setCurrentTab}
@@ -114,10 +156,7 @@ export function App() {
             <WelcomeView
               onNavigate={setCurrentTab}
               destination={destination}
-              simulation={{
-                ...simulation,
-                resetSimulation: handleResetSimulation,
-              }}
+              simulationState={simulation.state}
             />
           )}
 
@@ -125,6 +164,32 @@ export function App() {
             <MissionSelectView
               selectedDestination={destination}
               onSelectDestination={handleSelectDestination}
+            />
+          )}
+
+          {currentTab === 'habitat' && (
+            <HabitatControlDeck
+              state={simulation.state}
+              calculations={simulation.calculations}
+              destination={destination}
+              onSetO2Mode={simulation.setO2Mode}
+              onSetWaterRecyclerMode={simulation.setWaterRecyclerMode}
+              onSetWaterRation={simulation.setWaterRation}
+              onToggleIceSmelting={simulation.toggleIceSmelting}
+              onTogglePowerAllocation={simulation.togglePowerAllocation}
+              onCleanSolarPanels={simulation.cleanSolarPanels}
+              onUseEmergencyO2={simulation.useEmergencyO2Canister}
+              onAdvanceSol={simulation.advanceSol}
+              onResetSimulation={handleResetSimulation}
+            />
+          )}
+
+          {currentTab === 'exploration' && (
+            <ExplorationView
+              destination={destination}
+              onSelectDestination={handleSelectDestination}
+              onUnlockAchievement={handleUnlockAchievement}
+              onNavigateToHabitat={() => setCurrentTab('habitat')}
             />
           )}
 
@@ -137,6 +202,14 @@ export function App() {
             />
           )}
 
+          {currentTab === 'achievements' && (
+            <AchievementsView
+              achievements={achievements}
+              currentSol={simulation.state.currentSol}
+              onNavigateToHabitat={() => setCurrentTab('habitat')}
+            />
+          )}
+
           {currentTab === 'settings' && (
             <SettingsView
               settings={settings}
@@ -146,13 +219,15 @@ export function App() {
         </div>
       </div>
 
-      {/* NOVA AI Mission Copilot Panel (Docked at bottom-right) */}
+      {/* NOVA AI Mission Copilot Panel (Docked at bottom-right, collapsible) */}
       <div className="fixed bottom-4 right-4 z-40 w-[92vw] sm:w-96 max-w-sm">
         <NovaCompanion
           destination={destination}
           currentSol={simulation.state.currentSol}
           lastDebriefMessage={simulation.state.lastDebriefMessage}
           solTip={simulation.state.currentEvent.tip}
+          activeTab={currentTab}
+          missionStatus={simulation.state.missionStatus}
         />
       </div>
 
