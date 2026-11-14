@@ -1,4 +1,4 @@
-import { SolDailyEvent, Destination } from '../types';
+import type { SolDailyEvent, Destination } from '../types.ts';
 
 // ================= 30-SOL SCIENTIFIC LUNAR EXPEDITION EVENTS =================
 // The Moon has no atmosphere (vacuum). Extreme temperatures (-130°C to +120°C).

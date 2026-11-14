@@ -1,4 +1,4 @@
-import { Achievement } from '../types';
+import type { Achievement } from '../types.ts';
 
 export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
