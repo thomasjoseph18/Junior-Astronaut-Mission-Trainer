@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
+import { useState, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Navbar } from './components/Navbar';
 import { MissionStatusRibbon } from './components/MissionStatusRibbon';
@@ -16,7 +16,7 @@ import { MarsSurfaceScene } from './components/mars-pov/MarsSurfaceScene';
 import { POVHud } from './components/lunar-pov/POVHud';
 import { MissionDebriefScreen } from './components/MissionDebriefScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { GameShell } from './components/GameShell';
+import { GameApp } from './game/GameApp';
 import { StaticBackdrop, WebGLFallback } from './components/WebGLFallback';
 import { NavTab, Destination, SettingsConfig, JournalEntry, SolTelemetry, Achievement, ExplorationPoint } from './types';
 import { getInitialJournal } from './data/missions';
@@ -32,7 +32,7 @@ import { detectWebGL } from './engine/webgl';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
-  const [destination, setDestination] = useState<Destination>('moon');
+  const [classicDest, setClassicDest] = useState<Destination | null>(null);
   // Versioned save: both destinations' simulations, journals, achievements.
   const [{ storage, persistent }] = useState(() => resolveStorage(() => window.localStorage));
   const [saveOk, setSaveOk] = useState(true);
@@ -45,6 +45,34 @@ export function App() {
     }
     return loaded;
   });
+
+  // `saveRef` always holds the newest save. Every update goes through commit/commitSilent, so there is
+  // one writer and no stale closures. commitSilent is for high-frequency game ticks (suit, rover): it
+  // updates the ref immediately and lets React catch up about once a second.
+  const saveRef = useRef(save);
+  const dirty = useRef(false);
+  const commit = useCallback((fn: (s: SaveGame) => SaveGame) => {
+    const next = fn(saveRef.current);
+    if (next === saveRef.current) return;
+    saveRef.current = next;
+    dirty.current = false;
+    setSave(next);
+  }, []);
+  const commitSilent = useCallback((fn: (s: SaveGame) => SaveGame) => {
+    const next = fn(saveRef.current);
+    if (next === saveRef.current) return;
+    saveRef.current = next;
+    dirty.current = true;
+  }, []);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (dirty.current) { dirty.current = false; setSave(saveRef.current); }
+    }, 1000);
+    const flush = () => { writeSave(storage, saveRef.current); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+    return () => { window.clearInterval(id); window.removeEventListener('pagehide', flush); };
+  }, [storage]);
 
   useEffect(() => {
     setSaveOk(writeSave(storage, save));
@@ -59,13 +87,13 @@ export function App() {
   // Settings live inside the versioned save, so they persist across reloads.
   const settings = save.settings;
   const handleUpdateSettings = useCallback((patch: Partial<SettingsConfig>) => {
-    setSave((prev) => {
+    commit((prev) => {
       const merged = { ...prev.settings, ...patch };
       if (typeof patch.masterVolume === 'number') merged.masterVolume = Math.min(1, Math.max(0, patch.masterVolume));
       if (typeof patch.callSign === 'string') merged.callSign = patch.callSign.slice(0, 24);
       return { ...prev, settings: merged };
     });
-  }, []);
+  }, [commit]);
 
   // Achievements are derived from the save and only change through real game events.
   const achievements: Achievement[] = useMemo(
@@ -78,24 +106,37 @@ export function App() {
   );
 
   const handleGameEvent = useCallback((event: GameEvent) => {
-    setSave((prev) => applyGameEvent(prev, event));
-  }, []);
+    commit((prev) => applyGameEvent(prev, event));
+  }, [commit]);
 
   const handleSiteViewed = useCallback((siteId: string) => {
-    setSave((prev) => markSiteViewed(prev, siteId));
-  }, []);
+    commit((prev) => markSiteViewed(prev, siteId));
+  }, [commit]);
 
   const handleDailyJournalEntry = useCallback((entry: JournalEntry, dest: Destination) => {
-    setSave((prev) => {
+    commit((prev) => {
       const list = prev.journals[dest];
       if (list.some((e) => e.id === entry.id || (e.sol === entry.sol && e.title === entry.title))) return prev;
       return { ...prev, journals: { ...prev.journals, [dest]: [entry, ...list] } };
     });
-  }, []);
+  }, [commit]);
 
   const handleSimulationsChange = useCallback((sims: SimulationMap) => {
-    setSave((prev) => ({ ...prev, simulations: sims }));
+    commit((prev) => ({ ...prev, simulations: sims }));
+  }, [commit]);
+
+  // ---- Game state machine (first-person shell) ----
+  const [game, dispatchGame] = useReducer(gameReducer, undefined, initialGameState);
+
+  useEffect(() => {
+    dispatchGame({ type: 'BOOT_DONE', introSeen: save.progress.introSeen, uiMode: save.settings.uiMode });
+    // boot runs once, from the loaded save
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Game mode: the game state machine owns the destination. Classic mode keeps its own selection.
+  const destination: Destination = game.screen === 'classic' ? (classicDest ?? game.destination) : game.destination;
+  useEffect(() => { if (game.screen !== 'classic') setClassicDest(null); }, [game.screen]);
 
   const [initialSims] = useState<SimulationMap>(() => save.simulations);
   const simulation = useHabitatSimulation(destination, {
@@ -109,13 +150,15 @@ export function App() {
 
   // Starting a destination for the first time is a real event (first_touchdown).
   useEffect(() => {
+    // In the game, a mission starts when the player actually enters it (habitat or surface), not on the menu.
+    if (game.screen === 'boot' || game.screen === 'intro' || game.screen === 'command' || game.screen === 'navigation' || game.screen === 'debrief') return;
     handleGameEvent({ type: 'mission_started', destination });
-  }, [destination, handleGameEvent]);
+  }, [destination, handleGameEvent, game.screen]);
 
   const handleToggleAudio = () => handleUpdateSettings({ audioEnabled: !settings.audioEnabled });
 
   const handleAddCustomJournalEntry = (newEntry: JournalEntry) => {
-    setSave((prev) => ({
+    commit((prev) => ({
       ...prev,
       journals: { ...prev.journals, [destination]: [newEntry, ...prev.journals[destination]] },
     }));
@@ -123,23 +166,14 @@ export function App() {
 
   // Switching destination keeps BOTH simulations and journals intact.
   const handleSelectDestination = useCallback((newDest: Destination) => {
-    if (newDest !== destination) setDestination(newDest);
+    if (newDest !== destination) setClassicDest(newDest);
   }, [destination]);
 
   // Restart only the active destination (its simulation and its auto-logged journal).
   const handleResetSimulation = useCallback(() => {
     simulation.resetSimulation();
-    setSave((prev) => ({ ...prev, journals: { ...prev.journals, [destination]: getInitialJournal(destination) } }));
-  }, [simulation, destination]);
-
-  // ---- Game state machine (first-person shell) ----
-  const [game, dispatchGame] = useReducer(gameReducer, undefined, initialGameState);
-
-  useEffect(() => {
-    dispatchGame({ type: 'BOOT_DONE', introSeen: save.progress.introSeen, uiMode: save.settings.uiMode });
-    // boot runs once, from the loaded save
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    commit((prev) => ({ ...prev, journals: { ...prev.journals, [destination]: getInitialJournal(destination) } }));
+  }, [simulation, destination, commit]);
 
   // The Experience Mode setting drives the classic <-> game switch after boot.
   useEffect(() => {
@@ -172,13 +206,24 @@ export function App() {
 
   if (game.screen !== 'classic') {
     return (
-      <GameShell
-        saveWarning={saveWarning}
+      <GameApp
         state={game}
         dispatch={dispatchGame}
-        unlocks={save.progress}
-        reducedMotion={settings.reducedMotion}
+        save={save}
+        saveRef={saveRef}
+        commit={commit}
+        commitSilent={commitSilent}
+        simulation={simulation}
+        achievements={achievements}
+        webgl={webgl}
+        canRender3D={canRender3D}
+        contextLost={contextLost}
+        onContextLost={() => setContextLost(true)}
+        onTryAnyway={webgl.reason === 'major_performance_caveat' ? () => setForceWebGL(true) : undefined}
+        saveWarning={saveWarning}
+        onUpdateSettings={handleUpdateSettings}
         onUseClassic={() => handleUpdateSettings({ uiMode: 'classic' })}
+        initialJournal={getInitialJournal}
       />
     );
   }

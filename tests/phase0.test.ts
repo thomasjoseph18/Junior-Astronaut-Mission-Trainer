@@ -73,7 +73,7 @@ test('state machine: full journey command -> navigation -> habitat -> surface ->
 // ---------- settings ----------
 test('settings: defaults, sanitising and clamping', () => {
   assert.equal(defaultSettings(true).reducedMotion, true);
-  assert.equal(DEFAULT_UI_MODE, 'classic');
+  assert.equal(DEFAULT_UI_MODE, 'game'); // the first-person game is the default; classic remains selectable
   const s = sanitizeSettings({ callSign: '  <b>Zed</b>\n', masterVolume: 9, textSize: 'huge', uiMode: 'nope', captionsEnabled: 'yes', reducedMotion: false }, true);
   assert.equal(s.callSign, 'bZed/b');
   assert.equal(s.masterVolume, 1);

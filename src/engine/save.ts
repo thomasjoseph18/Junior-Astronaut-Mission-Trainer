@@ -2,6 +2,7 @@
 import type { Destination, HabitatSimulationState, JournalEntry, SettingsConfig } from '../types.ts';
 import { defaultSettings, sanitizeSettings } from './settings.ts';
 import { getInitialSimulationState } from './simulation.ts';
+import { createFieldState, sanitizeField, type FieldState } from './field.ts';
 
 export const SAVE_KEY = 'buildscapes_save';
 export const SAVE_VERSION = 2;
@@ -12,6 +13,23 @@ export interface StorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem?(key: string): void;
+}
+
+/** Progress that belongs to the first-person game layer (additive: older saves simply gain defaults). */
+export interface GameProgress {
+  xp: number;
+  /** Site ids whose cadet quiz was answered correctly. */
+  quizCorrect: string[];
+  /** Site ids whose cadet quiz was answered at all (correct or not). */
+  quizAnswered: string[];
+  /** Finished missions (set when the debrief is shown after success). */
+  missionsCompleted: Record<Destination, boolean>;
+  /** The player has read the Artemis briefing (only reachable after Moon and Mars are complete). */
+  artemisBriefingSeen: boolean;
+}
+
+export function createGameProgress(): GameProgress {
+  return { xp: 0, quizCorrect: [], quizAnswered: [], missionsCompleted: { moon: false, mars: false }, artemisBriefingSeen: false };
 }
 
 export interface SaveGame {
@@ -26,6 +44,9 @@ export interface SaveGame {
   viewedSites: string[];
   progress: { moonTrainingComplete: boolean; introSeen: boolean };
   settings: SettingsConfig;
+  /** Suit, rover, radiation, food and crew state per destination (Moon and Mars stay separate). */
+  field: Record<Destination, FieldState>;
+  game: GameProgress;
 }
 
 export function createNewSave(prefersReducedMotion = false): SaveGame {
@@ -38,6 +59,8 @@ export function createNewSave(prefersReducedMotion = false): SaveGame {
     viewedSites: [],
     progress: { moonTrainingComplete: false, introSeen: false },
     settings: defaultSettings(prefersReducedMotion),
+    field: { moon: createFieldState(), mars: createFieldState() },
+    game: createGameProgress(),
   };
 }
 
@@ -77,6 +100,22 @@ export function migrateSave(raw: unknown, prefersReducedMotion = false): SaveGam
     base.progress.introSeen = raw.progress.introSeen === true;
   }
   base.settings = sanitizeSettings(isObj(raw) ? raw.settings : undefined, prefersReducedMotion);
+
+  // Game-layer data is optional: saves from before it existed just get defaults.
+  const fieldRaw = isObj(raw.field) ? raw.field : {};
+  base.field = { moon: sanitizeField(fieldRaw.moon), mars: sanitizeField(fieldRaw.mars) };
+  if (isObj(raw.game)) {
+    const g = raw.game;
+    const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+    const mc = isObj(g.missionsCompleted) ? g.missionsCompleted : {};
+    base.game = {
+      xp: typeof g.xp === 'number' && Number.isFinite(g.xp) ? Math.max(0, Math.min(1e7, Math.floor(g.xp))) : 0,
+      quizCorrect: list(g.quizCorrect),
+      quizAnswered: list(g.quizAnswered),
+      missionsCompleted: { moon: mc.moon === true, mars: mc.mars === true },
+      artemisBriefingSeen: g.artemisBriefingSeen === true,
+    };
+  }
   return base;
 }
 
