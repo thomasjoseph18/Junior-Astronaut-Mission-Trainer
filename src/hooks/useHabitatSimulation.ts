@@ -15,6 +15,7 @@ import {
   getInitialSimulationState,
 } from '../engine/simulation';
 import type { GameEvent } from '../engine/achievements';
+import { drawFromHabitat } from '../engine/field';
 
 export type SimulationMap = Record<Destination, HabitatSimulationState>;
 
@@ -94,13 +95,24 @@ export function useHabitatSimulation(
 
   const useEmergencyO2Canister = useCallback(() => { update(actions.useEmergencyO2Canister); }, [update]);
 
-  const advanceSol = useCallback(() => {
+  /** Returns the new state, or null when the mission is already finished. */
+  const advanceSol = useCallback((): HabitatSimulationState | null => {
     const result = advanceSolState(simsRef.current[destination], destination);
-    if (!result) return;
+    if (!result) return null;
     update(() => result.state);
     onGameEvent?.({ type: 'sol_completed', facts: result.facts });
     onJournalAdd?.(result.journalEntry, destination);
+    return result.state;
   }, [update, destination, onGameEvent, onJournalAdd]);
+
+  /** Latest state of the active destination, read from the synchronous ref (safe inside frame loops). */
+  const getState = useCallback((): HabitatSimulationState => simsRef.current[destination], [destination]);
+
+  /** The game layer spends habitat oxygen / battery (refilling a suit, charging the rover). */
+  const drawResources = useCallback(
+    (cost: { oxygen: number; battery: number }) => { update((p) => drawFromHabitat(p, cost)); },
+    [update],
+  );
 
   /** Restarts ONLY the active destination. */
   const resetSimulation = useCallback(() => {
@@ -119,6 +131,8 @@ export function useHabitatSimulation(
     cleanSolarPanels,
     useEmergencyO2Canister,
     advanceSol,
+    getState,
+    drawResources,
     resetSimulation,
   };
 }

@@ -1,11 +1,8 @@
 // Settings defaults + sanitiser. Pure; safe to run on untrusted/corrupt saved data.
 import type { SettingsConfig, UiMode } from '../types.ts';
 
-/**
- * Until the game shell has real scenes (Phase 2), the working classic app stays the default.
- * Flip this single constant to 'game' when the Command Centre ships.
- */
-export const DEFAULT_UI_MODE: UiMode = 'classic';
+/** The first-person game is the main experience. Classic mode stays available in Settings and as a fallback. */
+export const DEFAULT_UI_MODE: UiMode = 'game';
 
 export function defaultSettings(prefersReducedMotion = false): SettingsConfig {
   return {

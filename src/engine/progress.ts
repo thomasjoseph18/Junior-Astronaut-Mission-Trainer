@@ -4,6 +4,8 @@ import type { Destination } from '../types.ts';
 import { EXPLORATION_POINTS } from '../data/exploration.ts';
 import { evaluateAchievements, type GameEvent } from './achievements.ts';
 import type { SaveGame } from './save.ts';
+import { getInitialSimulationState } from './simulation.ts';
+import { createFieldState } from './field.ts';
 
 export function siteIdsFor(destination: Destination): string[] {
   return EXPLORATION_POINTS.filter((p) => p.destination === destination).map((p) => p.id);
@@ -50,4 +52,24 @@ export function completeSiteTask(save: SaveGame, destination: Destination, siteI
 export function markSiteViewed(save: SaveGame, siteId: string): SaveGame {
   if (save.viewedSites.includes(siteId)) return save;
   return { ...save, viewedSites: [...save.viewedSites, siteId] };
+}
+
+/**
+ * Restart ONE destination's mission from the game: simulation, field state and completed sites for that
+ * destination are reset; achievements, XP and the other destination are untouched.
+ */
+export function resetDestinationProgress(save: SaveGame, destination: Destination): SaveGame {
+  const siteIds = new Set(siteIdsFor(destination));
+  return {
+    ...save,
+    simulations: { ...save.simulations, [destination]: getInitialSimulationState(destination) },
+    field: { ...save.field, [destination]: createFieldState() },
+    completedSites: save.completedSites.filter((id) => !siteIds.has(id)),
+    game: {
+      ...save.game,
+      quizCorrect: save.game.quizCorrect.filter((id) => !siteIds.has(id)),
+      quizAnswered: save.game.quizAnswered.filter((id) => !siteIds.has(id)),
+      missionsCompleted: { ...save.game.missionsCompleted, [destination]: false },
+    },
+  };
 }
