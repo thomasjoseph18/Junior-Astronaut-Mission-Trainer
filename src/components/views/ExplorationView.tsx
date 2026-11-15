@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Destination, ExplorationPoint } from '../../types';
 import { EXPLORATION_POINTS } from '../../data/exploration';
+import { SCIENTIFIC_RESOURCES_BY_SITE } from '../../data/nasaResources';
 
 interface ExplorationViewProps {
   destination: Destination;
@@ -43,6 +44,7 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
   const [selectedSiteId, setSelectedSiteId] = useState<string>(sites[0]?.id || '');
 
   const activeSite = sites.find((s) => s.id === selectedSiteId) || sites[0];
+  const scientificResources = activeSite ? SCIENTIFIC_RESOURCES_BY_SITE[activeSite.id] ?? [] : [];
 
   const handleInspectSite = (site: ExplorationPoint) => {
     setSelectedSiteId(site.id);
@@ -377,6 +379,45 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
                   {activeSite.nasaConnection}
                 </p>
               </div>
+
+              {/* Curated source links: references support the science, not the procedural terrain mesh. */}
+              {scientificResources.length > 0 && (
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-4.5 space-y-3">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center space-x-2 text-emerald-300">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="text-xs font-tech font-bold uppercase tracking-wider">
+                        Scientific Data &amp; Learning Resources
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider rounded-full border border-emerald-400/40 px-2 py-1 text-emerald-200">
+                      Source-linked
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {scientificResources.map((resource) => (
+                      <div key={resource.url} className="rounded-xl border border-emerald-500/20 bg-slate-950/50 p-3 space-y-1.5">
+                        <div className="text-sm font-display font-bold text-white">{resource.title}</div>
+                        <div className="text-[10px] font-mono uppercase tracking-wide text-emerald-200/90">{resource.provider}</div>
+                        <div className="text-[11px] text-emerald-100/80">{resource.dataType}</div>
+                        <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">{resource.description}</p>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">{resource.usageNote}</p>
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 pt-1 text-xs font-bold text-emerald-300 hover:text-emerald-200 underline underline-offset-4"
+                        >
+                          Open original resource <ChevronRight className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Terrain transparency: the playable 3D surface remains a procedural educational simulation. These linked datasets and visualizations are scientific references, not inputs to the rendered terrain.
+                  </p>
+                </div>
+              )}
 
               {/* Junior Astronaut STEM Discovery Fact */}
               <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4.5 space-y-2">
