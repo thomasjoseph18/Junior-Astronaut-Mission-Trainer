@@ -43,6 +43,16 @@ export function SuitGauges({ showRover }: { showRover: boolean }) {
   );
 }
 
+const compassLabelAliases: Readonly<Record<string, string>> = {
+  'Shackleton Crater Rim': 'Shackleton Rim',
+  'Permanently Shadowed Region': 'PSR Cold Trap',
+  'Lunar Roving Vehicle': 'Lunar Rover',
+  'Jezero Crater River Delta': 'Jezero Delta',
+  'MOXIE ISRU Test Field': 'MOXIE Field',
+  'Isidis Planitia Dust Corridor': 'Isidis Basin',
+  'Buried Glacial Ice Sheet': 'Glacier Site',
+};
+
 export function Radar() {
   const hud = useStore(hudStore);
   return (
@@ -76,7 +86,7 @@ export function Compass() {
         })}
         {items.map((m, i) => (
           <span key={m.id} className={`bs-compass-tick is-${m.kind}`} style={{ left: `${50 + (m.rel / span) * 100}%`, top: 4 }}>
-            ◆{i === 0 && <small>{m.label} · {Math.round(m.distance)} m</small>}
+            ◆{i === 0 && <small>{compassLabelAliases[m.label] ?? m.label} · {Math.round(m.distance)} m</small>}
           </span>
         ))}
         <div className="bs-compass-mid" />

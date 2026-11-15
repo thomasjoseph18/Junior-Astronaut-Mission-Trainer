@@ -511,3 +511,56 @@
 @media (max-width: 760px) {
   .bs-panel { backdrop-filter: blur(11px); -webkit-backdrop-filter: blur(11px); }
 }
+
+/* Keep game panels usable on short and narrow viewports without nested scrollbars. */
+.bs-modal {
+  min-width: 0;
+  max-width: 100%;
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.bs-modal::before { top: 0; left: 0; }
+.bs-modal::after { right: 0; bottom: 0; }
+.bs-modal .bs-input { min-width: 0; }
+.bs-modal .bs-journal-entry,
+.bs-ach > div { min-width: 0; overflow-wrap: anywhere; }
+.bs-ach { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+
+.bs-hint {
+  max-width: min(430px, calc(100vw - 44px));
+  padding: 8px 11px;
+  border: 1px solid rgba(75, 190, 235, 0.42);
+  border-left: 2px solid rgba(67, 223, 255, 0.82);
+  border-radius: 9px;
+  background: linear-gradient(135deg, rgba(3, 14, 32, 0.9), rgba(4, 17, 36, 0.82));
+  box-shadow: 0 6px 20px rgba(0, 4, 16, 0.32);
+  color: #d3e2f2;
+  line-height: 1.5;
+}
+.bs-hint b { color: #f2f8ff; }
+
+.bs-compass { height: 52px; }
+.bs-compass-tick small {
+  max-width: clamp(96px, 17vw, 168px);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.05;
+}
+
+@media (max-width: 760px) {
+  .bs-modal {
+    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
+  }
+  .bs-hint {
+    left: 12px;
+    max-width: calc(100vw - 24px);
+    padding: 7px 9px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    letter-spacing: 0.025em;
+  }
+}
