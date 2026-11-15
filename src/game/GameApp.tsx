@@ -79,7 +79,6 @@ export function GameApp(props: GameAppProps) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [novaText, setNovaText] = useState<string | null>(null);
   const [introReplay, setIntroReplay] = useState(false);
-  const [, forceTick] = useState(0);
   const introTime = useRef(0);
   const panelRef = useRef<PanelState | null>(null);
   const expectedUnlock = useRef(false);
@@ -100,8 +99,10 @@ export function GameApp(props: GameAppProps) {
   const setPanel = useCallback((p: PanelState | null) => {
     panelRef.current = p;
     if (p) {
-      expectedUnlock.current = true;
-      try { document.exitPointerLock?.(); } catch { /* */ }
+      expectedUnlock.current = Boolean(document.pointerLockElement);
+      if (document.pointerLockElement) {
+        try { document.exitPointerLock?.(); } catch { /* */ }
+      }
     }
     input.blocked = p !== null;
     if (p) input.clear();
@@ -128,12 +129,6 @@ export function GameApp(props: GameAppProps) {
   }, []);
 
   useEffect(() => { input.attach(); return () => { input.blocked = false; audio.stopAll(); }; }, []);
-
-  // flush silent commits so panels (React) see fresh suit / food numbers
-  useEffect(() => {
-    const id = window.setInterval(() => forceTick((n) => n + 1), 1000);
-    return () => window.clearInterval(id);
-  }, []);
 
   // ---------------- helpers ----------------
   const getField = useCallback((): FieldState => saveRef.current.field[stateRef.current.destination], [saveRef]);
@@ -294,7 +289,8 @@ export function GameApp(props: GameAppProps) {
       next = n;
       const rolled = advanceFieldSol(f, next, d);
       f = rolled.field;
-      notes = rolled.notes;
+      const solNotes = count > 1 ? rolled.notes.map((msg) => `Sol ${next.currentSol}: ${msg}`) : rolled.notes;
+      for (const msg of solNotes) if (!notes.includes(msg)) notes.push(msg);
       advanced++;
     }
     if (advanced === 0) { toast('The mission is already finished.', 'warn'); return; }
@@ -334,7 +330,6 @@ export function GameApp(props: GameAppProps) {
         say('That was close! The crew recovered you. Remember to watch your O₂ and Suit bars, and refill at the habitat.');
         audio.sfx('alarm');
         addJournal({ id: `eva-recovery-${s.currentSol}-${f.recoveries}`, sol: s.currentSol, title: 'Suit emergency', body: 'My suit ran out of oxygen or power, and the crew recovered me. Next time I will turn back sooner.', outcomeStatus: 'warning' });
-        forceTick((n) => n + 1);
         return;
       }
       patchField(() => f);
@@ -508,14 +503,14 @@ export function GameApp(props: GameAppProps) {
   // ---------------- hotkeys ----------------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') {
+        if (panelRef.current) closePanel(); else if (PLAYABLE.includes(stateRef.current.screen) && stateRef.current.screen !== 'navigation') setPanel({ kind: 'pause' });
+        return;
+      }
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       const s = stateRef.current.screen;
       if (!PLAYABLE.includes(s)) return;
-      if (e.code === 'Escape') {
-        if (panelRef.current) closePanel(); else setPanel({ kind: 'pause' });
-        return;
-      }
       if (panelRef.current || s === 'navigation') return;
       if (e.code === 'KeyJ') openPanel('journal');
       else if (e.code === 'KeyK') openPanel('achievements');
@@ -526,13 +521,16 @@ export function GameApp(props: GameAppProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [closePanel, novaHint, openPanel, say, setPanel]);
 
+  useEffect(() => {
+    if (screen !== 'intro' && introReplay) setIntroReplay(false);
+  }, [screen, introReplay]);
+
   // after the cinematic: remember it was seen
   const finishIntro = useCallback(() => {
     audio.unlock();
     audio.stopSpeaking();
     audio.sfx('blip');
     commit((s) => (s.progress.introSeen ? s : { ...s, progress: { ...s.progress, introSeen: true } }));
-    setIntroReplay(false);
     go({ type: 'INTRO_FINISHED' }, 350);
   }, [commit, go]);
 
@@ -654,18 +652,20 @@ export function GameApp(props: GameAppProps) {
               <div className="bs-gauge"><span>Rad</span><div className="bs-bar"><i style={{ width: `${field.radiationDose}%`, background: 'linear-gradient(90deg,#b36bff,#ff5a4a)' }} /></div><b>{Math.round(field.radiationDose)}</b></div>
             </div>
           )}
-          <ObjectiveTracker
-            title={screen === 'command' && prog.done === 0 ? 'Choose a mission at the glowing table' : nextObj ? nextObj.title : 'All objectives complete!'}
-            done={prog.done} total={prog.total}
-            hint={screen === 'command' && prog.done === 0 ? 'Walk to the hologram table and press E.' : nextObj?.hint} />
+          <div className="bs-top-right">
+            <ObjectiveTracker
+              title={screen === 'command' && prog.done === 0 ? 'Choose a mission at the glowing table' : nextObj ? nextObj.title : 'All objectives complete!'}
+              done={prog.done} total={prog.total}
+              hint={screen === 'command' && prog.done === 0 ? 'Walk to the hologram table and press E.' : nextObj?.hint} />
           {screen === 'surface' && <SuitGauges showRover />}
           {screen === 'surface' && hud.driving && <RoverDash battery={live.roverBattery} />}
-          <div className="bs-chips">
+            <div className="bs-chips">
             <span className="bs-chip">SOL {sim.currentSol}/{sim.totalSols}</span>
             {screen === 'surface' && <span className={`bs-chip ${live.evaRemaining < 90 ? 'is-warn' : ''}`}>AIR ≈ {Math.floor(live.evaRemaining / 60)}:{String(live.evaRemaining % 60).padStart(2, '0')}</span>}
             {storm && <span className="bs-chip is-bad">☀ SOLAR STORM</span>}
             {screen === 'surface' && hud.inColdShadow && <span className="bs-chip is-warn">❄ COLD SHADOW</span>}
             {screen === 'surface' && live.radiation >= 60 && <span className="bs-chip is-bad">☢ RADIATION HIGH</span>}
+            </div>
           </div>
           <Prompt />
           <div className={`bs-vignette ${danger ? 'on' : storm && screen === 'surface' ? 'on storm' : ''}`} />
@@ -673,7 +673,7 @@ export function GameApp(props: GameAppProps) {
           <NovaBubble text={novaText} talking={novaTalking} />
           <ControlsHint screen={screen as 'surface' | 'habitat' | 'command'} />
           <PlaceBanner key={sceneKey} title={place.title} subtitle={place.subtitle} />
-          {!hud.locked && !paused && ready && (
+          {!hud.locked && !hud.driving && !paused && ready && (
             <div className="bs-panel bs-ghost" style={{ position: 'absolute', left: '50%', bottom: 90, transform: 'translateX(-50%)', padding: '6px 14px', fontSize: 12, color: 'var(--dim)' }}>Click the view to capture the mouse · drag to look</div>
           )}
         </div>
