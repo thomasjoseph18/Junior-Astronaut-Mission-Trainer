@@ -1,5 +1,19 @@
 # BUILDSCAPES: Apollo to Artemis — Development Progress (checkpoint backup)
 
+## Update — Recovery comparison and Mars runtime validation (2026-11-15)
+
+- **Recovery baseline:** isolated source archive of `origin/integrate-game-fix` at `a6d3cea`. During the comparison, the original checkout was at `f5b569d`; it was later fast-forwarded outside this task and is now at `a6d3cea`.
+- **Recovery bundle:** ZIP integrity passed and all 19 manifest-listed hashes matched. The Moon render fix and regression guard were already present. No files were restored; `restore.py` was not run. Linux-oriented browser helpers remain references and were not copied into the project.
+- **Browser QA:** used the integrated browser on Windows against the scratch Vite server. Confirmed Command Centre, Mars Habitat and Mars surface render; habitat/surface transitions; Mars sample collection; all four site hold-E interactions and quiz results (one incorrect and three correct); sample/site XP and journal entries; rover boarding, driving, steering, braking and exit; solar cleaning; suit drain/refill; five habitat system inspections; hydroponics harvest; and power allocation.
+- **Screenshots captured:** Command Centre, Mars Surface HUD, Mars Habitat, Sol 9 storm HUD, MOXIE quiz, and the final Mars debrief are attached in the development chat.
+- **Storms and progression:** observed Mars storm briefings at Sols 9, 18 and 25. On Sol 9 the storm HUD/warning appeared and radiation increased during surface exposure; radiation faded while sheltered. Cleaned the array at Sols 9, 15, 21 and 27. All 9 objectives completed.
+- **Victory/debrief:** managed communications power and crop harvests, then completed the 30-Sol mission. Debrief showed success, 3/3 stars, 4/4 sites, 9/9 objectives, O₂ 100%, water 67%, battery 100%, food 88%, crew health 100%, and zero suit recoveries.
+- **XP correction:** browser QA found the debrief reported 665 XP while the saved total was 660. The result calculation counted the initial Sol as an XP award even though gameplay awards Sol XP only when advancing. Changed it to count `currentSol - 1` advances and added a regression assertion; a fresh browser load then showed `+660 XP` and `660 XP total`.
+- **Applied after approval:** the XP correction was applied to the original checkout in `src/engine/objectives.ts`, `tests/game.test.ts`, and this progress file. No commit, push, or merge was made.
+- **Validation on the original checkout:** `npm run typecheck`, `npm test` (55/55), `npm run build` (TypeScript and Vite), and `git diff --check` all passed. Node emitted only the existing `module.register()` deprecation warning.
+- **Still unverified:** genuine Moon-victory-to-Mars-unlock browser flow; rover charge-pad interaction; suit-emergency recovery; Classic Mode and restart UI; WebGL fallback; Artemis briefing; real-GPU performance. The unit test covers Mars unlock rules, but that is not a browser verification.
+- **Next:** verify the genuine Moon victory -> Mars unlock flow in a browser, then continue with the remaining checks above. Keep the Moon habitat-exit regression on the QA list.
+
 ## Update — Moon surface render freeze fix (2026-11-15)
 
 - **Branch:** `integrate-game-fix`.
@@ -32,8 +46,8 @@
 | `vite build` | **NOT RUN** (sandbox has Windows-only native binaries, no network) |
 | Real GPU, pointer lock, audio, speech, touch | **NOT RUN** |
 
-## Not yet verified at runtime (code written, never exercised in a browser)
-Mars scene visuals; rover driving; hold-E site tasks -> site panel -> quiz; sample drilling; solar cleaning; suit refill; sleeping/Sol briefing; autopilot; debrief and Mars unlock; Artemis briefing; save/load through the UI; restart mission; low-suit emergencies; WebGL-fallback screen inside the game; the intro keyboard controls; replay from Pause.
+## Still not verified at runtime (after the 2026-11-15 Mars browser run)
+Genuine Moon-victory-to-Mars-unlock browser flow; rover charge-pad interaction; suit-emergency recovery; autopilot; Classic Mode and restart UI; WebGL-fallback screen inside the game; Artemis briefing; save/load through the UI; the intro keyboard controls; replay from Pause; real-GPU performance.
 
 ## Known bugs / rough edges
 1. Habitat interior is dark/low-contrast (floor nearly black); hydroponic plants small. Brighten floor + add emissive.
@@ -48,13 +62,11 @@ Mars scene visuals; rover driving; hold-E site tasks -> site panel -> quiz; samp
 10. The `#debug` URL hash exposes `window.__bsGame/__bsPlayer/__bsThree` for automated tests (harmless; remove if undesired).
 
 ## Exact next steps
-1. `npm install && npm run typecheck && npm test && npm run build && npm run dev`; fix anything Vite reports.
-2. Play-through in a real browser: intro -> command table -> Launch -> habitat -> airlock -> Moon. Fix whatever breaks (see "Not yet verified").
-3. Use `scripts/sandbox-visual-test` ideas or the browser to check Mars, rover, PSR crater, all 8 sites.
-4. Brighten habitat; balance suit drain (`SUIT_RATES` in `field.ts`) against distances in `terrain.ts`.
-5. Add NOVA reactions to site completion, journal entries for achievements, and a short first-run tutorial.
-6. Profile on a laptop GPU; if slow, lower `boulderCount`, terrain segments, or disable shadows by default.
-7. Write the final README feature list + NASA attribution/credits screen.
+1. Review the scratch-only XP fix and its patch; do not apply it to the original checkout without permission.
+2. Verify the genuine Moon victory -> Mars unlock flow in a browser.
+3. Test the rover charge pad, suit-emergency recovery, save/load, restart, Classic Mode, WebGL fallback, and Artemis briefing.
+4. Recheck the Moon habitat-exit transition and evaluate real-GPU performance.
+5. Continue focused gameplay polish only after those checks.
 
 ## Tests / build commands
 `npm run typecheck` · `npm test` · `npm run build` · `npm run dev`. Tests need Node >= 22.6.

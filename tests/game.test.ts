@@ -179,7 +179,8 @@ test('mission result: failure, incomplete, and a 3-star success are distinguishe
   const win = computeMissionResult({ ...base, quizCorrect: sites, sim: { ...sim, missionStatus: 'victory', currentSol: 30 }, field, completedSites: sites });
   assert.equal(win.outcome, 'success');
   assert.equal(win.stars, 3);
-  assert.ok(win.xp > 600);
+  assert.equal(win.xp, 665, 'Only the 29 advances from Sol 1 through Sol 30 award Sol XP');
+  assert.equal(computeMissionResult({ ...base, sim, field, completedSites: [] }).xp, 0);
   const thin = computeMissionResult({ ...base, sim: { ...sim, missionStatus: 'victory', currentSol: 30, oxygenLevel: 20 }, field, completedSites: [] });
   assert.equal(thin.stars, 1);
   assert.equal(rankFor(0).title, 'Cadet');

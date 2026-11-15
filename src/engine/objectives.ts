@@ -226,7 +226,8 @@ export function computeMissionResult(r: ResultsInput): MissionResult {
   if (won && stewardship) stars += 1;
 
   const quizXp = r.quizCorrect.filter((id) => sites.includes(id)).length * XP.quiz;
-  const xp = solsSurvived * XP.solSurvived + sitesDone * XP.site + field.samples.length * XP.sample + quizXp + stars * XP.star;
+  const solAdvances = Math.max(0, sim.currentSol - 1);
+  const xp = solAdvances * XP.solSurvived + sitesDone * XP.site + field.samples.length * XP.sample + quizXp + stars * XP.star;
 
   const lines = [
     { label: 'Sols completed', value: `${solsSurvived} / ${sim.totalSols}`, good: won },
