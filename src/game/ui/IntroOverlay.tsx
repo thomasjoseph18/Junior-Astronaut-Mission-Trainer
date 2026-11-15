@@ -120,8 +120,9 @@ export function IntroOverlay({ timeRef, captions, reducedMotion, audioOn, replay
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
-      // Let focused buttons handle Enter/Space through their native click behavior.
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.closest('button')) return;
+      // Let focused controls handle text entry and native Enter/Space activation.
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
+      if (target?.closest('button') && (e.key === 'Enter' || e.code === 'Space')) return;
       if (e.key === 'Escape' || e.key === 'Enter') { if (phaseRef.current === 'title' && e.key === 'Enter') begin(); else onFinish(); }
       else if (e.code === 'Space') { e.preventDefault(); if (phaseRef.current === 'play') setPaused((p) => !p); else if (phaseRef.current === 'title') begin(); }
       else if (e.key === 'ArrowRight') jump(1);
