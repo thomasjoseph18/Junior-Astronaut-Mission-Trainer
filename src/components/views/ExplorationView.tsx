@@ -158,6 +158,12 @@ export const ExplorationView: React.FC<ExplorationViewProps> = ({
             <p className="text-xs sm:text-sm text-slate-300 font-sans max-w-2xl">
               Survey extraterrestrial geological landmarks, sample ancient lakebed sediments and cryogenic cold traps, and inspect historical Apollo and Perseverance landing zones.
             </p>
+
+            <div className={`mt-3 rounded-xl border px-4 py-3 text-[11px] sm:text-xs leading-relaxed font-sans ${
+              isMars ? 'border-amber-500/30 bg-amber-950/30 text-amber-100/90' : 'border-cyan-500/30 bg-cyan-950/30 text-cyan-100/90'
+            }`}>
+              <strong className="font-bold">3D terrain data note:</strong> This surface is a procedural educational simulation, not a terrain mesh built from NASA elevation data. Landmark science and listed latitude/longitude references describe real locations; the 3D world's local positions are illustrative and are not geospatially registered to those coordinates.
+            </div>
           </div>
 
           {/* Destination Selector Pill */}
