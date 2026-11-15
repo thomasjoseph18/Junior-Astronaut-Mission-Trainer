@@ -113,6 +113,20 @@ export function GameApp(props: GameAppProps) {
     audio.configure({ enabled: settings.audioEnabled, volume: settings.masterVolume, voice: settings.novaVoiceEnabled });
   }, [settings.audioEnabled, settings.masterVolume, settings.novaVoiceEnabled]);
 
+  // Unlock WebAudio from the first real user gesture, including returning saves
+  // that bypass the intro overlay. Keep listening while audio is disabled.
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (settingsRef.current.audioEnabled) audio.unlock();
+    };
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
   useEffect(() => { input.attach(); return () => { input.blocked = false; audio.stopAll(); }; }, []);
 
   // flush silent commits so panels (React) see fresh suit / food numbers
@@ -514,6 +528,7 @@ export function GameApp(props: GameAppProps) {
 
   // after the cinematic: remember it was seen
   const finishIntro = useCallback(() => {
+    audio.unlock();
     audio.stopSpeaking();
     audio.sfx('blip');
     commit((s) => (s.progress.introSeen ? s : { ...s, progress: { ...s.progress, introSeen: true } }));
