@@ -402,6 +402,7 @@ export function HabitatExterior({ x, z, alert }: { x: number; z: number; alert?:
 
 export function SolarArray({ x, z, dust = 0 }: { x: number; z: number; dust?: number }) {
   const mat = useMemo(() => MAT.solar.clone(), []);
+  useEffect(() => () => mat.dispose(), [mat]);
   useEffect(() => { mat.color.set('#142a5a').lerp(new THREE.Color('#7a6a58'), Math.min(0.7, dust / 120)); }, [dust, mat]);
   return (
     <group position={[x, 0, z]}>
@@ -418,9 +419,9 @@ export function SolarArray({ x, z, dust = 0 }: { x: number; z: number; dust?: nu
   );
 }
 
-export function Lander({ x, z, mars = false }: { x: number; z: number; mars?: boolean }) {
+export function Lander({ x, z, mars = false, destination }: { x: number; z: number; mars?: boolean; destination: Destination }) {
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, terrainHeight(destination, x, z), z]}>
       <mesh position={[0, 2.2, 0]} castShadow material={MAT.gold}><cylinderGeometry args={[2.6, 3, 2.4, 8]} /></mesh>
       <mesh position={[0, 4.2, 0]} castShadow material={MAT.hull}><cylinderGeometry args={[1.8, 2.6, 1.8, 8]} /></mesh>
       <mesh position={[0, 5.6, 0]} castShadow material={MAT.hull}><coneGeometry args={[1.8, 1.6, 8]} /></mesh>
@@ -463,7 +464,7 @@ export function HeritageMemorial({ x, z, done }: { x: number; z: number; done: b
 
 export function SampleStation({ x, z, done, destination }: { x: number; z: number; done: boolean; destination: Destination }) {
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, terrainHeight(destination, x, z), z]}>
       <mesh position={[0, 0.9, 0]} castShadow material={MAT.hullDark}><boxGeometry args={[1.4, 1.8, 1.0]} /></mesh>
       <mesh position={[0, 2.1, 0]} castShadow material={MAT.hull}><cylinderGeometry args={[0.1, 0.1, 1.6, 8]} /></mesh>
       <mesh position={[0.5, 1.2, 0.52]}><boxGeometry args={[0.5, 0.35, 0.04]} /><meshBasicMaterial color={done ? '#44ff99' : '#ffb84a'} /></mesh>
@@ -517,6 +518,11 @@ export function ChargePad({ x, z }: { x: number; z: number }) {
     <group position={[x, 0.05, z]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[5, 6]} /><meshStandardMaterial color="#2a2f38" roughness={0.9} /></mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}><ringGeometry args={[2.2, 2.35, 4]} /><meshBasicMaterial color="#59d6ff" /></mesh>
+      <group position={[2, 0.72, -2]}>
+        <mesh castShadow><cylinderGeometry args={[0.22, 0.28, 1.35, 8]} /><meshStandardMaterial color="#526579" metalness={0.7} roughness={0.35} /></mesh>
+        <mesh position={[0, 0.48, 0.03]}><boxGeometry args={[0.38, 0.24, 0.08]} /><meshBasicMaterial color="#59d6ff" /></mesh>
+        <mesh position={[0, -0.28, 0.2]}><boxGeometry args={[0.08, 0.08, 0.4]} /><meshBasicMaterial color="#ffd24a" /></mesh>
+      </group>
     </group>
   );
 }
