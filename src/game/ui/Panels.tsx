@@ -6,6 +6,7 @@ import { CROP, canHarvest, isSolarStorm, nextStormSol, evaSecondsRemaining } fro
 import { SITE_TASKS, nextObjective, objectiveStatus, rankFor, taskForSite } from '../../engine/objectives';
 import { MISSIONS, NOVA_FACTS } from '../../data/missions';
 import { EXPLORATION_POINTS } from '../../data/exploration';
+import { SCIENTIFIC_RESOURCES_BY_SITE } from '../../data/nasaResources';
 import { APOLLO13_SOURCES } from '../../data/apollo13';
 import { isDestinationUnlocked, type DestinationId, type Unlocks } from '../../engine/gameState';
 import { siteIdsFor } from '../../engine/progress';
@@ -372,6 +373,7 @@ function ConsolePanel(p: PanelProps) {
 function Site(p: PanelProps) {
   const id = p.panel.siteId ?? '';
   const pt = EXPLORATION_POINTS.find((x) => x.id === id);
+  const scientificResources = SCIENTIFIC_RESOURCES_BY_SITE[id] ?? [];
   const task = taskForSite(id) ?? SITE_TASKS[0];
   const answered = p.save.game.quizAnswered.includes(id);
   const correct = p.save.game.quizCorrect.includes(id);
@@ -385,6 +387,26 @@ function Site(p: PanelProps) {
         <div className="bs-stat"><b>Why it matters</b><div className="bs-sub" style={{ marginTop: 4, lineHeight: 1.5 }}>{pt.scientificSignificance}</div></div>
         <div className="bs-stat"><b>NASA connection</b><div className="bs-sub" style={{ marginTop: 4, lineHeight: 1.5 }}>{pt.nasaConnection}</div></div>
       </div>
+
+      {scientificResources.length > 0 && (
+        <div className="bs-panel" style={{ marginTop: 12, padding: 14, borderColor: 'rgba(125, 255, 192, 0.35)' }}>
+          <div className="bs-kicker" style={{ color: 'var(--mint)' }}>Scientific data &amp; learning resources</div>
+          {scientificResources.map((resource) => (
+            <div key={resource.url} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(125, 255, 192, 0.16)' }}>
+              <b style={{ display: 'block' }}>{resource.title}</b>
+              <div className="bs-sub" style={{ marginTop: 3 }}>{resource.provider} · {resource.dataType}</div>
+              <p className="bs-sub" style={{ lineHeight: 1.55, margin: '6px 0' }}>{resource.description}</p>
+              <p className="bs-sub" style={{ lineHeight: 1.5, margin: '4px 0' }}>{resource.usageNote}</p>
+              <a href={resource.url} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: 4, color: 'var(--mint)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                Open original resource ↗
+              </a>
+            </div>
+          ))}
+          <p className="bs-sub" style={{ marginTop: 10, lineHeight: 1.5 }}>
+            Terrain note: these are scientific references, not data inputs to the playable 3D terrain, which remains a procedural educational simulation.
+          </p>
+        </div>
+      )}
       <p style={{ marginTop: 12, color: 'var(--cyan)' }}>💡 {pt.interactiveFact}</p>
       <div className="bs-panel" style={{ marginTop: 12, padding: 14 }}>
         <div className="bs-kicker">Cadet check{answered ? '' : ' · +15 XP'}</div>
