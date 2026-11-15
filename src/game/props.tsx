@@ -132,17 +132,17 @@ export function useTerrainGeometry(destination: Destination, segments: number): 
 }
 
 export function Terrain({ destination, lowPerf }: { destination: Destination; lowPerf: boolean }) {
-  const geo = useTerrainGeometry(destination, lowPerf ? 160 : 256);
+  const geo = useTerrainGeometry(destination, lowPerf ? 160 : 320);
   const detail = useMemo(() => {
     const t = groundDetail(destination).clone();
-    t.repeat.set(WORLD_HALF / 7, WORLD_HALF / 7);
+    t.repeat.set(WORLD_HALF / 6.5, WORLD_HALF / 6.5);
     t.needsUpdate = true;
     return t;
   }, [destination]);
   useEffect(() => () => detail.dispose(), [detail]);
   return (
     <mesh geometry={geo} receiveShadow>
-      <meshStandardMaterial vertexColors map={detail} bumpMap={detail} bumpScale={destination === 'moon' ? 0.35 : 0.3} roughness={1} metalness={0} />
+      <meshStandardMaterial vertexColors map={detail} bumpMap={detail} roughnessMap={detail} bumpScale={destination === 'moon' ? 0.38 : 0.34} roughness={1} metalness={0} />
     </mesh>
   );
 }
