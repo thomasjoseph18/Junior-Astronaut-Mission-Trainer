@@ -210,7 +210,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
     // charge pad
     const pad = world.roverPad;
     list.push({
-      id: 'charge', x: pad.x + 3.4, z: pad.z - 3.2, radius: 4, hold: 1.2,
+      id: 'charge', x: pad.x + 2, z: pad.z - 2, radius: 4, hold: 1.2,
       prompt: () => `Hold E: plug the rover into the charger (uses ${Math.max(1, Math.round((100 - api.getField().rover.battery) / 25))}% habitat battery)`,
       enabled: () => !drivingRef.current && api.getField().rover.battery < 97 && Math.hypot(rover.current.x - pad.x, rover.current.z - pad.z) < 7,
       onInteract: () => api.chargeRover(),
