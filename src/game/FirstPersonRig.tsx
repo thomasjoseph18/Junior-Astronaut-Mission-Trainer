@@ -255,7 +255,7 @@ export function FirstPersonRig({
       input.wasPressed('KeyE');
     }
 
-    onFrame?.({ dt, player: p });
+    if (modeRef.current !== 'frozen') onFrame?.({ dt, player: p });
 
     // ----- HUD (throttled) -----
     hudAccum.current += dt;
