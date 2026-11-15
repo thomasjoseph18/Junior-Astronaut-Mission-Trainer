@@ -361,7 +361,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
       <Boulders destination={destination} count={boulderCount} />
       <HabitatExterior x={world.habitat.x} z={world.habitat.z} alert={storm} />
       <SolarArray x={world.solarArray.x} z={world.solarArray.z} dust={sim.solarDustAccumulation} />
-      <Lander x={world.lander.x} z={world.lander.z} mars={mars} />
+      <Lander x={world.lander.x} z={world.lander.z} mars={mars} destination={destination} />
       <ChargePad x={world.roverPad.x} z={world.roverPad.z} />
       <SampleStation x={world.sampleStation.x} z={world.sampleStation.z} done={api.getField().samples.includes(world.sampleStation.id)} destination={destination} />
       {world.sites.map((s) => (
