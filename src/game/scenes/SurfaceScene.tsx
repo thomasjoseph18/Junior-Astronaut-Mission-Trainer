@@ -54,7 +54,7 @@ function DistantRange({ destination }: { destination: Destination }) {
 function SiteProp({ id, x, z, done, destination }: { id: string; x: number; z: number; done: boolean; destination: Destination }) {
   const y = terrainHeight(destination, x, z);
   const spin = useRef<THREE.Group>(null);
-  useFrame((_, dt) => { if (spin.current) spin.current.rotation.y += dt * (hudStore.get().focusId === id && hudStore.get().holdProgress > 0 ? 6 : 0.8); });
+  useFrame((_, dt) => { const hud = hudStore.get(); if (spin.current) spin.current.rotation.y += dt * (hud.focusId === `${id}:do` && hud.holdProgress > 0 ? 6 : 0.8); });
   const led = done ? '#44ff99' : '#ffb84a';
   if (id === 'moon-apollo-11') return <group position={[0, y, 0]}><HeritageMemorial x={x} z={z} done={done} /></group>;
   return (
@@ -261,6 +261,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
   const _off = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, delta) => {
     if (!drivingRef.current) return;
+    if (paused || input.blocked) { audio.motor(null); return; }
     const dt = Math.min(delta, 0.05);
     const r = rover.current;
     const f = api.getField();
