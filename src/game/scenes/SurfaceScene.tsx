@@ -126,7 +126,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
     const moon = destination === 'moon';
     scene.background = new THREE.Color(moon ? '#000004' : '#c98e66');
     scene.fog = moon ? null : new THREE.Fog('#cf9a72', 140, 1000);
-    gl.toneMappingExposure = moon ? 1.05 : 1.0;
+    gl.toneMappingExposure = moon ? 0.98 : 1.0;
     return () => { scene.fog = null; };
   }, [destination, scene, gl]);
 

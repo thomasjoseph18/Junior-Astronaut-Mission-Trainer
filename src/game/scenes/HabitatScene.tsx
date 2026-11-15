@@ -17,7 +17,7 @@ interface Props { destination: Destination; api: SceneApi; paused: boolean }
 const W = { x: HABITAT_HALF.x, z: HABITAT_HALF.z, h: 3.5 };
 
 const wallMat = new THREE.MeshStandardMaterial({ color: '#c9d0da', roughness: 0.6, metalness: 0.3 });
-const floorMat = new THREE.MeshStandardMaterial({ color: '#2b313c', roughness: 0.55, metalness: 0.5 });
+const floorMat = new THREE.MeshStandardMaterial({ color: '#566273', roughness: 0.68, metalness: 0.22 });
 const ceilMat = new THREE.MeshStandardMaterial({ color: '#aab2bf', roughness: 0.7, metalness: 0.2 });
 const trim = new THREE.MeshStandardMaterial({ color: '#4b5565', roughness: 0.5, metalness: 0.7 });
 
@@ -132,8 +132,8 @@ export function HabitatScene({ destination, api, paused }: Props) {
 
   return (
     <>
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#dfe9ff', '#2a2f3a', 0.7]} />
+      <ambientLight intensity={0.68} />
+      <hemisphereLight args={['#e8f4ff', '#3b4658', 0.88]} />
       {[-11, -3.5, 4, 11.5].map((x) => <pointLight key={x} position={[x, 3.1, 0]} intensity={14} distance={14} color="#eaf3ff" decay={1.6} />)}
       <pointLight ref={alarm} position={[0, 3, 0]} color="#ff3a2a" intensity={0} distance={20} />
       <Starfield count={400} radius={200} size={1.6} />

@@ -132,17 +132,17 @@ export function useTerrainGeometry(destination: Destination, segments: number): 
 }
 
 export function Terrain({ destination, lowPerf }: { destination: Destination; lowPerf: boolean }) {
-  const geo = useTerrainGeometry(destination, lowPerf ? 160 : 256);
+  const geo = useTerrainGeometry(destination, lowPerf ? 160 : 320);
   const detail = useMemo(() => {
     const t = groundDetail(destination).clone();
-    t.repeat.set(WORLD_HALF / 7, WORLD_HALF / 7);
+    t.repeat.set(WORLD_HALF / 6.5, WORLD_HALF / 6.5);
     t.needsUpdate = true;
     return t;
   }, [destination]);
   useEffect(() => () => detail.dispose(), [detail]);
   return (
     <mesh geometry={geo} receiveShadow>
-      <meshStandardMaterial vertexColors map={detail} bumpMap={detail} bumpScale={destination === 'moon' ? 0.35 : 0.3} roughness={1} metalness={0} />
+      <meshStandardMaterial vertexColors map={detail} bumpMap={detail} roughnessMap={detail} bumpScale={destination === 'moon' ? 0.38 : 0.34} roughness={1} metalness={0} />
     </mesh>
   );
 }
@@ -223,7 +223,7 @@ export function SurfaceLights({ destination, lowPerf }: { destination: Destinati
     <>
       <directionalLight
         ref={light}
-        intensity={moon ? 4.2 : 2.8}
+        intensity={moon ? 3.8 : 2.8}
         color={moon ? '#fff8ec' : '#ffe2c0'}
         castShadow={!lowPerf}
         shadow-mapSize={[2048, 2048]}
@@ -231,8 +231,8 @@ export function SurfaceLights({ destination, lowPerf }: { destination: Destinati
         shadow-camera-near={1} shadow-camera-far={300}
         shadow-bias={-0.0004} shadow-normalBias={0.05}
       />
-      <hemisphereLight args={[moon ? '#8798bb' : '#d9a888', moon ? '#2a2a30' : '#5a3322', moon ? 2.1 : 1.3]} />
-      <ambientLight intensity={moon ? 0.55 : 0.45} />
+      <hemisphereLight args={[moon ? '#8798bb' : '#d9a888', moon ? '#2a2a30' : '#5a3322', moon ? 1.8 : 1.3]} />
+      <ambientLight intensity={moon ? 0.4 : 0.45} />
     </>
   );
 }
@@ -254,8 +254,8 @@ export function MoonSky() {
     <FollowCamera>
       <Starfield radius={1500} />
       {/* The Sun, just above the horizon */}
-      <sprite position={dir.clone().multiplyScalar(1400)} scale={[260, 260, 1]}>
-        <spriteMaterial map={glow} color="#fff4dc" transparent depthWrite={false} blending={THREE.AdditiveBlending} fog={false} />
+      <sprite position={dir.clone().multiplyScalar(1400)} scale={[160, 160, 1]}>
+        <spriteMaterial map={glow} color="#fff4dc" transparent opacity={0.42} depthWrite={false} blending={THREE.AdditiveBlending} fog={false} />
       </sprite>
       {/* Earth hanging low over the horizon, like the real view from the south pole */}
       <Planet kind="earth" radius={95} position={[-780, 330, -1100]} rotationSpeed={0.004} />
@@ -527,9 +527,11 @@ export function ChargePad({ x, z }: { x: number; z: number }) {
 export function Beacon({ x, z, done, destination, height = 38 }: { x: number; z: number; done: boolean; destination: Destination; height?: number }) {
   const ref = useRef<THREE.Mesh>(null);
   const y = terrainHeight(destination, x, z);
+  const moon = destination === 'moon';
+  const beamOpacity = moon ? 0.13 : 0.22;
   useFrame((s) => {
     const m = ref.current?.material as THREE.MeshBasicMaterial | undefined;
-    if (m) m.opacity = (done ? 0.12 : 0.22) + Math.sin(s.clock.elapsedTime * 1.6 + x) * 0.05;
+    if (m) m.opacity = (done ? beamOpacity * 0.55 : beamOpacity) + Math.sin(s.clock.elapsedTime * 1.6 + x) * (moon ? 0.025 : 0.05);
   });
   return (
     <group position={[x, y, z]}>
@@ -539,7 +541,7 @@ export function Beacon({ x, z, done, destination, height = 38 }: { x: number; z:
       </mesh>
       <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[1.6, 1.9, 40]} />
-        <meshBasicMaterial color={done ? '#44ff99' : '#4fd2ff'} transparent opacity={0.8} fog={false} />
+        <meshBasicMaterial color={done ? '#44ff99' : '#4fd2ff'} transparent opacity={moon ? 0.55 : 0.8} fog={false} />
       </mesh>
     </group>
   );
