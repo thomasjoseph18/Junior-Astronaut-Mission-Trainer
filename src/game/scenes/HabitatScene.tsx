@@ -20,6 +20,8 @@ const wallMat = new THREE.MeshStandardMaterial({ color: '#c9d0da', roughness: 0.
 const floorMat = new THREE.MeshStandardMaterial({ color: '#2b313c', roughness: 0.55, metalness: 0.5 });
 const ceilMat = new THREE.MeshStandardMaterial({ color: '#aab2bf', roughness: 0.7, metalness: 0.2 });
 const trim = new THREE.MeshStandardMaterial({ color: '#4b5565', roughness: 0.5, metalness: 0.7 });
+const bunkMat = new THREE.MeshStandardMaterial({ color: '#3b5b8c', roughness: 0.9 });
+const pillowMat = new THREE.MeshStandardMaterial({ color: '#e8eef8', roughness: 0.9 });
 
 type V3 = [number, number, number];
 function Box({ p, s, m = wallMat, shadow = false }: { p: V3; s: V3; m?: THREE.Material; shadow?: boolean }) {
@@ -208,8 +210,8 @@ export function HabitatScene({ destination, api, paused }: Props) {
       {/* bunk */}
       <group position={[-7, 0, -6]}>
         <Box p={[0, 0.5, 0]} s={[3, 0.5, 1.7]} m={trim} shadow />
-        <Box p={[0, 0.85, 0]} s={[2.8, 0.25, 1.5]} m={new THREE.MeshStandardMaterial({ color: '#3b5b8c', roughness: 0.9 })} />
-        <Box p={[-1.0, 1.05, 0]} s={[0.7, 0.18, 1.1]} m={new THREE.MeshStandardMaterial({ color: '#e8eef8', roughness: 0.9 })} />
+        <Box p={[0, 0.85, 0]} s={[2.8, 0.25, 1.5]} m={bunkMat} />
+        <Box p={[-1.0, 1.05, 0]} s={[0.7, 0.18, 1.1]} m={pillowMat} />
         <Box p={[0, 2.3, -0.8]} s={[3, 0.1, 0.1]} m={trim} />
       </group>
       {/* console + comms */}

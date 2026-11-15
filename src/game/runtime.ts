@@ -101,10 +101,16 @@ class Input {
     if (this.attached || typeof window === 'undefined') return;
     this.attached = true;
     window.addEventListener('keydown', (e) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      // Keep native keyboard behavior for focused controls (including intro buttons).
+      // Tab is always reserved for browser focus navigation, never gameplay.
+      if (
+        tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' ||
+        target?.isContentEditable || target?.closest('button, a, [role="button"], [role="link"]')
+      ) return;
       if (this.blocked) return;
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
       if (!this.down.has(e.code)) this.pressed.add(e.code);
       this.down.add(e.code);
     });

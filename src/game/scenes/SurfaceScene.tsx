@@ -54,7 +54,7 @@ function DistantRange({ destination }: { destination: Destination }) {
 function SiteProp({ id, x, z, done, destination }: { id: string; x: number; z: number; done: boolean; destination: Destination }) {
   const y = terrainHeight(destination, x, z);
   const spin = useRef<THREE.Group>(null);
-  useFrame((_, dt) => { if (spin.current) spin.current.rotation.y += dt * (hudStore.get().focusId === id && hudStore.get().holdProgress > 0 ? 6 : 0.8); });
+  useFrame((_, dt) => { const hud = hudStore.get(); if (spin.current) spin.current.rotation.y += dt * (hud.focusId === `${id}:do` && hud.holdProgress > 0 ? 6 : 0.8); });
   const led = done ? '#44ff99' : '#ffb84a';
   if (id === 'moon-apollo-11') return <group position={[0, y, 0]}><HeritageMemorial x={x} z={z} done={done} /></group>;
   return (
@@ -210,7 +210,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
     // charge pad
     const pad = world.roverPad;
     list.push({
-      id: 'charge', x: pad.x + 3.4, z: pad.z - 3.2, radius: 4, hold: 1.2,
+      id: 'charge', x: pad.x + 2, z: pad.z - 2, radius: 4, hold: 1.2,
       prompt: () => `Hold E: plug the rover into the charger (uses ${Math.max(1, Math.round((100 - api.getField().rover.battery) / 25))}% habitat battery)`,
       enabled: () => !drivingRef.current && api.getField().rover.battery < 97 && Math.hypot(rover.current.x - pad.x, rover.current.z - pad.z) < 7,
       onInteract: () => api.chargeRover(),
@@ -261,6 +261,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
   const _off = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, delta) => {
     if (!drivingRef.current) return;
+    if (paused || input.blocked) { audio.motor(null); return; }
     const dt = Math.min(delta, 0.05);
     const r = rover.current;
     const f = api.getField();
@@ -361,7 +362,7 @@ export function SurfaceScene({ destination, api, paused }: Props) {
       <Boulders destination={destination} count={boulderCount} />
       <HabitatExterior x={world.habitat.x} z={world.habitat.z} alert={storm} />
       <SolarArray x={world.solarArray.x} z={world.solarArray.z} dust={sim.solarDustAccumulation} />
-      <Lander x={world.lander.x} z={world.lander.z} mars={mars} />
+      <Lander x={world.lander.x} z={world.lander.z} mars={mars} destination={destination} />
       <ChargePad x={world.roverPad.x} z={world.roverPad.z} />
       <SampleStation x={world.sampleStation.x} z={world.sampleStation.z} done={api.getField().samples.includes(world.sampleStation.id)} destination={destination} />
       {world.sites.map((s) => (

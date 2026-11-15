@@ -7,12 +7,13 @@ type V3 = [number, number, number];
 
 /** A small screen that redraws a few lines of live text a couple of times per second. */
 export function LiveScreen({ p, size, rot = [0, 0, 0], lines, accent }: { p: V3; size: [number, number]; rot?: V3; lines: () => string[]; accent: string }) {
+  const [w, h] = size;
   const { tex, ctx, cv } = useMemo(() => {
-    const cv = document.createElement('canvas'); cv.width = 256; cv.height = Math.round(256 * (size[1] / size[0]));
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = Math.round(256 * (h / w));
     const ctx = cv.getContext('2d')!;
     const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
     return { tex, ctx, cv };
-  }, [size]);
+  }, [w, h]);
   const acc = useRef(0);
   useEffect(() => () => tex.dispose(), [tex]);
   useFrame((_, dt) => {
@@ -21,8 +22,10 @@ export function LiveScreen({ p, size, rot = [0, 0, 0], lines, accent }: { p: V3;
     acc.current = 0;
     ctx.fillStyle = '#04101c'; ctx.fillRect(0, 0, cv.width, cv.height);
     ctx.strokeStyle = accent; ctx.lineWidth = 3; ctx.strokeRect(3, 3, cv.width - 6, cv.height - 6);
-    ctx.fillStyle = accent; ctx.font = 'bold 20px monospace';
-    lines().forEach((l, i) => ctx.fillText(l, 14, 32 + i * 26));
+    ctx.fillStyle = accent; ctx.font = 'bold 13px monospace';
+    const lineHeight = 17;
+    const visibleLines = Math.max(1, Math.floor((cv.height - 8) / lineHeight));
+    lines().slice(0, visibleLines).forEach((l, i) => ctx.fillText(l, 10, 17 + i * lineHeight, cv.width - 20));
     tex.needsUpdate = true;
   });
   return <mesh position={p} rotation={rot}><planeGeometry args={size} /><meshBasicMaterial map={tex} toneMapped={false} /></mesh>;
