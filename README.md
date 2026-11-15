@@ -16,7 +16,7 @@ A future elevation-data integration should use appropriately licensed and docume
 
 ## Scientific resource references shown in-game
 
-The Exploration view now provides source-linked learning references at two relevant locations:
+The first-person mission site-discovery panels and the Exploration view provide source-linked learning references at two relevant locations:
 
 - **Shackleton Crater Rim (Moon):** [NASA LRO/LOLA Site 04 topography](https://pgda.gsfc.nasa.gov/products/78). The product page identifies Site 04 as the Shackleton rim and describes 5 m/pixel elevation products and related slope/uncertainty products. The [NASA Moon Kit](https://svs.gsfc.nasa.gov/4720/) is also linked as an educational visualization resource.
 - **Jezero Crater River Delta (Mars):** [Mars 2020 / Jezero terrain products](https://murray-lab.caltech.edu/Mars2020/index.html), published by the Bruce Murray Laboratory for Planetary Visualization at Caltech and derived from HiRISE imagery.
