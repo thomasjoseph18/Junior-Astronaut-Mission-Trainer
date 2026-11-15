@@ -81,7 +81,9 @@
 .bs-gauge span { color: var(--dim); }
 
 /* ---------- HUD: objectives ---------- */
-.bs-objective { position: absolute; top: 22px; right: 22px; width: 300px; padding: 12px 16px; }
+.bs-top-right { position: absolute; top: 22px; right: 22px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; width: min(360px, calc(100vw - 180px)); pointer-events: none; }
+.bs-top-right > * { pointer-events: none; }
+.bs-objective { position: relative; top: auto; right: auto; left: auto; width: 300px; max-width: 100%; padding: 12px 16px; }
 .bs-objective .bs-row { flex-wrap: nowrap; align-items: flex-start; }
 .bs-objective-title { font-family: var(--tech); font-weight: 700; font-size: 1.1em; line-height: 1.2; }
 .bs-medal { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gold); display: grid; place-items: center; color: var(--gold); font-size: 13px; }
@@ -125,7 +127,7 @@
 .bs-hold > i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--mint)); }
 
 /* ---------- HUD: status chips ---------- */
-.bs-chips { position: absolute; right: 22px; top: 150px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; pointer-events: none; }
+.bs-chips { position: relative; right: auto; top: auto; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; pointer-events: none; width: 100%; }
 .bs-chip { font: 700 13px var(--tech); letter-spacing: 0.06em; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--edge); background: var(--glass); color: var(--text); }
 .bs-chip.is-warn { border-color: var(--amber); color: var(--amber); }
 .bs-chip.is-bad { border-color: var(--alert); color: #ffb3aa; animation: bs-pulse 0.7s infinite alternate; }
@@ -382,6 +384,33 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+
+/* ---------- demo-critical responsive HUD / cinematic layout ---------- */
+@media (max-width: 1024px) {
+  .bs-radar { left: 16px; top: 16px; width: 116px; height: 116px; }
+  .bs-top-right { top: 16px; right: 16px; left: 148px; width: auto; }
+  .bs-objective { left: auto; right: auto; top: auto; width: 100%; max-width: none; padding: 10px 12px; }
+  .bs-compass { top: 140px; left: 50%; width: calc(100vw - 32px); max-width: none; }
+  .bs-chips { top: auto; right: auto; max-width: 100%; }
+}
+
+@media (max-width: 760px) {
+  .bs-radar { left: 12px; top: 12px; width: 92px; height: 92px; }
+  .bs-top-right { top: 12px; right: 12px; left: 120px; width: auto; }
+  .bs-objective { left: auto; right: auto; top: auto; width: 100%; padding: 9px 10px; }
+  .bs-objective-title { font-size: 1em; }
+  .bs-compass { top: 128px; left: 50%; width: calc(100vw - 24px); height: 40px; }
+  .bs-chips { top: auto; right: auto; gap: 6px; max-width: 100%; }
+  .bs-chip { font-size: 11px; padding: 5px 9px; }
+  .bs-gauges { left: 12px; bottom: 12px; width: min(230px, calc(100vw - 24px)); padding: 10px; }
+  .bs-nova { left: 12px; right: 12px; bottom: 180px; max-width: none; gap: 8px; }
+  .bs-nova-face { width: 56px; height: 56px; }
+  .bs-nova-bubble { max-width: calc(100% - 64px); padding: 8px 10px; font-size: 0.88em; }
+  .bs-cine-top { left: 12px; right: 12px; top: calc(9vh + 10px); }
+  .bs-cine-controls { left: 12px; right: 12px; top: calc(9vh + 48px); justify-content: center; flex-wrap: wrap; gap: 6px; }
+  .bs-cine-controls .bs-btn { min-height: 34px; padding: 6px 9px; font-size: 12px; }
 }
 
 

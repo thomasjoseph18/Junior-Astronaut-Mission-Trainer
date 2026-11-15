@@ -145,7 +145,8 @@ export function IntroScene({ timeRef, reducedMotion, onReady }: Props) {
   const tmp = useMemo(() => new THREE.Vector3(), []);
   const tmp2 = useMemo(() => new THREE.Vector3(), []);
   const lineGeo = useMemo(() => new THREE.BufferGeometry().setFromPoints(TRAJECTORY.getPoints(160)), []);
-  const trailLine = useMemo(() => new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: '#59d6ff', transparent: true, opacity: 0.45 })), [lineGeo]);
+  const lineMat = useMemo(() => new THREE.LineBasicMaterial({ color: '#59d6ff', transparent: true, opacity: 0.45 }), []);
+  const trailLine = useMemo(() => new THREE.Line(lineGeo, lineMat), [lineGeo, lineMat]);
   const poweredRef = useRef(true);
   const litRef = useRef(false);
 
@@ -161,7 +162,7 @@ export function IntroScene({ timeRef, reducedMotion, onReady }: Props) {
     g.userData.dirs = dirs;
     return g;
   }, []);
-  useEffect(() => () => { ventGeo.dispose(); lineGeo.dispose(); }, [ventGeo, lineGeo]);
+  useEffect(() => () => { ventGeo.dispose(); lineGeo.dispose(); lineMat.dispose(); }, [ventGeo, lineGeo, lineMat]);
 
   useFrame((state) => {
     const t = timeRef.current;

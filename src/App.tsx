@@ -69,9 +69,14 @@ export function App() {
       if (dirty.current) { dirty.current = false; setSave(saveRef.current); }
     }, 1000);
     const flush = () => { writeSave(storage, saveRef.current); };
+    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flush(); };
     window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
-    return () => { window.clearInterval(id); window.removeEventListener('pagehide', flush); };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [storage]);
 
   useEffect(() => {
