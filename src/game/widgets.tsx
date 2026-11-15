@@ -7,12 +7,13 @@ type V3 = [number, number, number];
 
 /** A small screen that redraws a few lines of live text a couple of times per second. */
 export function LiveScreen({ p, size, rot = [0, 0, 0], lines, accent }: { p: V3; size: [number, number]; rot?: V3; lines: () => string[]; accent: string }) {
+  const [w, h] = size;
   const { tex, ctx, cv } = useMemo(() => {
-    const cv = document.createElement('canvas'); cv.width = 256; cv.height = Math.round(256 * (size[1] / size[0]));
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = Math.round(256 * (h / w));
     const ctx = cv.getContext('2d')!;
     const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
     return { tex, ctx, cv };
-  }, [size]);
+  }, [w, h]);
   const acc = useRef(0);
   useEffect(() => () => tex.dispose(), [tex]);
   useFrame((_, dt) => {
