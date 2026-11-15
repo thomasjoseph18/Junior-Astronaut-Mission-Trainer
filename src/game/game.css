@@ -383,3 +383,28 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ---------- demo-critical responsive HUD / cinematic layout ---------- */
+@media (max-width: 1024px) {
+  .bs-radar { left: 16px; top: 16px; width: 116px; height: 116px; }
+  .bs-objective { left: 148px; right: 16px; top: 16px; width: auto; max-width: none; padding: 10px 12px; }
+  .bs-compass { top: 140px; left: 50%; width: calc(100vw - 32px); max-width: none; }
+  .bs-chips { top: 198px; right: 16px; max-width: calc(100vw - 32px); }
+}
+
+@media (max-width: 760px) {
+  .bs-radar { left: 12px; top: 12px; width: 92px; height: 92px; }
+  .bs-objective { left: 120px; right: 12px; top: 12px; width: auto; padding: 9px 10px; }
+  .bs-objective-title { font-size: 1em; }
+  .bs-compass { top: 128px; left: 50%; width: calc(100vw - 24px); height: 40px; }
+  .bs-chips { top: 178px; right: 12px; gap: 6px; max-width: calc(100vw - 24px); }
+  .bs-chip { font-size: 11px; padding: 5px 9px; }
+  .bs-gauges { left: 12px; bottom: 12px; width: min(230px, calc(100vw - 24px)); padding: 10px; }
+  .bs-nova { left: 12px; right: 12px; bottom: 180px; max-width: none; gap: 8px; }
+  .bs-nova-face { width: 56px; height: 56px; }
+  .bs-nova-bubble { max-width: calc(100% - 64px); padding: 8px 10px; font-size: 0.88em; }
+  .bs-cine-top { left: 12px; right: 12px; top: calc(9vh + 10px); }
+  .bs-cine-controls { left: 12px; right: 12px; top: calc(9vh + 48px); justify-content: center; flex-wrap: wrap; gap: 6px; }
+  .bs-cine-controls .bs-btn { min-height: 34px; padding: 6px 9px; font-size: 12px; }
+}
