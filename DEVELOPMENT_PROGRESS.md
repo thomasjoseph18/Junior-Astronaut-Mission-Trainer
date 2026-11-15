@@ -2,12 +2,13 @@
 
 ## Update — Moon surface render freeze fix (2026-11-15)
 
-- **Branch/HEAD:** `integrate-game-fix` at `1129c6b`; integration changes are uncommitted.
+- **Branch:** `integrate-game-fix`.
 - **Fix:** Removed the positive `useFrame` priority from `SurfaceScene`, restoring React Three Fiber's automatic rendering after the Moon surface mounts.
 - **Regression guard:** Added a test that rejects positive numeric priorities in `src/game` frame callbacks.
-- **Validation:** `npm test` passed (55/55); `npm run build` passed (TypeScript and Vite production build).
-- **Browser verification:** The supplied `frames-advance.py` was not added; Windows-compatible browser testing remains deferred.
-- **Worktree:** The three integration files are modified. Pre-existing staged deletion and untracked `how --stat d776676` remain untouched. No commit or push was made.
+- **Validation:** `npm test` passed (55/55); `npm run build` passed (TypeScript and Vite production build); `git diff --check` passed.
+- **Browser verification:** The user confirmed the Habitat-to-Moon transition works in the local browser. The supplied `frames-advance.py` helper was not added.
+- **GitHub commit:** `f5b569de8875d56abb399756356ae101c542f0c0` committed the fix and also removed the earlier accidental archive-command file.
+- **Cleanup:** The accidental terminal-output file `how --stat d776676` was removed in a follow-up cleanup commit. The Figma CSS commit remains in branch history.
 
 - Git branch: `buildscapes-game` (main untouched)
 - Code checkpoint commit: `8a2bc3e` (parent `b587d60`). A follow-up docs commit may sit on top of it.
