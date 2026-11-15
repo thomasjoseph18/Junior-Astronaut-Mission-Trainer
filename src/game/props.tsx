@@ -418,9 +418,9 @@ export function SolarArray({ x, z, dust = 0 }: { x: number; z: number; dust?: nu
   );
 }
 
-export function Lander({ x, z, mars = false }: { x: number; z: number; mars?: boolean }) {
+export function Lander({ x, z, mars = false, destination }: { x: number; z: number; mars?: boolean; destination: Destination }) {
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, terrainHeight(destination, x, z), z]}>
       <mesh position={[0, 2.2, 0]} castShadow material={MAT.gold}><cylinderGeometry args={[2.6, 3, 2.4, 8]} /></mesh>
       <mesh position={[0, 4.2, 0]} castShadow material={MAT.hull}><cylinderGeometry args={[1.8, 2.6, 1.8, 8]} /></mesh>
       <mesh position={[0, 5.6, 0]} castShadow material={MAT.hull}><coneGeometry args={[1.8, 1.6, 8]} /></mesh>
@@ -463,7 +463,7 @@ export function HeritageMemorial({ x, z, done }: { x: number; z: number; done: b
 
 export function SampleStation({ x, z, done, destination }: { x: number; z: number; done: boolean; destination: Destination }) {
   return (
-    <group position={[x, 0, z]}>
+    <group position={[x, terrainHeight(destination, x, z), z]}>
       <mesh position={[0, 0.9, 0]} castShadow material={MAT.hullDark}><boxGeometry args={[1.4, 1.8, 1.0]} /></mesh>
       <mesh position={[0, 2.1, 0]} castShadow material={MAT.hull}><cylinderGeometry args={[0.1, 0.1, 1.6, 8]} /></mesh>
       <mesh position={[0.5, 1.2, 0.52]}><boxGeometry args={[0.5, 0.35, 0.04]} /><meshBasicMaterial color={done ? '#44ff99' : '#ffb84a'} /></mesh>
