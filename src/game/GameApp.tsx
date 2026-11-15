@@ -657,8 +657,6 @@ export function GameApp(props: GameAppProps) {
               title={screen === 'command' && prog.done === 0 ? 'Choose a mission at the glowing table' : nextObj ? nextObj.title : 'All objectives complete!'}
               done={prog.done} total={prog.total}
               hint={screen === 'command' && prog.done === 0 ? 'Walk to the hologram table and press E.' : nextObj?.hint} />
-          {screen === 'surface' && <SuitGauges showRover />}
-          {screen === 'surface' && hud.driving && <RoverDash battery={live.roverBattery} />}
             <div className="bs-chips">
             <span className="bs-chip">SOL {sim.currentSol}/{sim.totalSols}</span>
             {screen === 'surface' && <span className={`bs-chip ${live.evaRemaining < 90 ? 'is-warn' : ''}`}>AIR ≈ {Math.floor(live.evaRemaining / 60)}:{String(live.evaRemaining % 60).padStart(2, '0')}</span>}
@@ -667,6 +665,8 @@ export function GameApp(props: GameAppProps) {
             {screen === 'surface' && live.radiation >= 60 && <span className="bs-chip is-bad">☢ RADIATION HIGH</span>}
             </div>
           </div>
+          {screen === 'surface' && <SuitGauges showRover />}
+          {screen === 'surface' && hud.driving && <RoverDash battery={live.roverBattery} />}
           <Prompt />
           <div className={`bs-vignette ${danger ? 'on' : storm && screen === 'surface' ? 'on storm' : ''}`} />
           <Toasts items={toasts} />
