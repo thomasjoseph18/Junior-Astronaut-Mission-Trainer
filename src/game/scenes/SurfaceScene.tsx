@@ -345,7 +345,8 @@ export function SurfaceScene({ destination, api, paused }: Props) {
     }
     void dist;
     frame(dt, player.current);
-  }, 1);
+  });
+  // Keep automatic rendering enabled when the surface scene mounts.
 
   const done = api.getCompletedSites();
   const sim = api.getSim();

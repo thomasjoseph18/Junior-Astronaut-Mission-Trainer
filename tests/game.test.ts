@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   advanceFieldSol, applyRecovery, canAfford, canHarvest, chargeRover, createFieldState, drawFromHabitat, evaSecondsRemaining,
   harvestCrops, isSolarStorm, needsRecovery, nextStormSol, refillSuit, roverImpact, sanitizeField, suitRefillCost, suitWarning,
@@ -297,4 +299,23 @@ test('boulders: deterministic, off the base pad, and large ones are solid', () =
   assert.ok(a.every((r) => Math.hypot(r.x, r.z - 10) >= 24));
   assert.ok(a.some((r) => r.solid));
   assert.ok(a.every((r) => !r.solid || r.scale > 1.2));
+});
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const file = join(dir, name);
+    return statSync(file).isDirectory() ? sourceFiles(file) : /\.tsx?$/.test(name) ? [file] : [];
+  });
+}
+
+test('R3F: no useFrame uses a positive priority (which disables automatic rendering)', () => {
+  const offenders: string[] = [];
+  for (const file of sourceFiles('src/game')) {
+    const source = readFileSync(file, 'utf8');
+    const re = /useFrame\(([\s\S]*?)\n\s*\}\s*,\s*(-?\d+)\s*\)/g;
+    for (const match of source.matchAll(re)) {
+      if (Number(match[2]) > 0) offenders.push(`${file}: useFrame priority ${match[2]}`);
+    }
+  }
+  assert.deepEqual(offenders, []);
 });

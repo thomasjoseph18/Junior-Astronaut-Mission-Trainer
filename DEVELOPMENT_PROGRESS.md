@@ -1,5 +1,14 @@
 # BUILDSCAPES: Apollo to Artemis — Development Progress (checkpoint backup)
 
+## Update — Moon surface render freeze fix (2026-11-15)
+
+- **Branch/HEAD:** `integrate-game-fix` at `1129c6b`; integration changes are uncommitted.
+- **Fix:** Removed the positive `useFrame` priority from `SurfaceScene`, restoring React Three Fiber's automatic rendering after the Moon surface mounts.
+- **Regression guard:** Added a test that rejects positive numeric priorities in `src/game` frame callbacks.
+- **Validation:** `npm test` passed (55/55); `npm run build` passed (TypeScript and Vite production build).
+- **Browser verification:** The supplied `frames-advance.py` was not added; Windows-compatible browser testing remains deferred.
+- **Worktree:** The three integration files are modified. Pre-existing staged deletion and untracked `how --stat d776676` remain untouched. No commit or push was made.
+
 - Git branch: `buildscapes-game` (main untouched)
 - Code checkpoint commit: `8a2bc3e` (parent `b587d60`). A follow-up docs commit may sit on top of it.
 - `docs/buildscapes-game-checkpoint.patch` = that commit as a `git am` patch for your existing repo.
