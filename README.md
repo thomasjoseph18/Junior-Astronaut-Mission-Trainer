@@ -1,27 +1,165 @@
-# Junior-Astronaut-Mission-Trainer
+# 🚀 BUILDSCAPES — Junior Astronaut Mission Trainer
 
-## Restoring this checkpoint
-1. Unzip `buildscapes-checkpoint.zip` into a new folder (node_modules and dist are intentionally excluded).
-2. `npm install` then `npm run typecheck`, `npm test`, `npm run dev` (Node >= 22.6).
-3. To apply onto your existing git repo instead: `git checkout buildscapes-game && git am docs/buildscapes-game-checkpoint.patch`.
-4. Read `DEVELOPMENT_PROGRESS.md` for status, bugs and next steps.
+### Explore. Survive. Discover.
 
-NASA is credited as the source of the mission facts used in this educational project. It is not endorsed by or affiliated with NASA.
+**BUILDSCAPES** is an interactive space-exploration and mission-training game created to introduce young learners to the science and challenges of human space exploration.
 
-## 3D terrain provenance
+Players step into the role of an astronaut, explore the Moon and Mars, manage mission resources, make decisions, complete objectives, and learn through hands-on discovery.
 
-The Moon and Mars first-person surfaces are deterministic procedural terrain simulations. Their landforms are inspired by real planetary features, while exploration entries provide real-world landmark names, scientific context, and reference coordinates. The current rendered terrain is **not** generated from NASA digital elevation models, and local in-game X/Z positions are not registered to the listed latitude/longitude coordinates. Do not describe the current 3D surfaces as NASA DEM terrain.
+> **Explore. Survive. Discover.**
 
-A future elevation-data integration should use appropriately licensed and documented NASA planetary datasets (for example, LRO/LOLA products for the Moon and MRO/MOLA or local higher-resolution products for Mars), with clear dataset citations, coordinate transforms, and a procedural fallback.
+## 🌌 Explore two worlds
 
-## Scientific resource references shown in-game
+### 🌕 Moon mission — Lunar South Pole
 
-The first-person mission site-discovery panels and the Exploration view provide source-linked learning references at two relevant locations:
+Embark on a 30-Sol expedition around the **Shackleton Rim** region.
 
-- **Shackleton Crater Rim (Moon):** [NASA LRO/LOLA Site 04 topography](https://pgda.gsfc.nasa.gov/products/78). The product page identifies Site 04 as the Shackleton rim and describes 5 m/pixel elevation products and related slope/uncertainty products. The [NASA Moon Kit](https://svs.gsfc.nasa.gov/4720/) is also linked as an educational visualization resource.
-- **Jezero Crater River Delta (Mars):** [Mars 2020 / Jezero terrain products](https://murray-lab.caltech.edu/Mars2020/index.html), published by the Bruce Murray Laboratory for Planetary Visualization at Caltech and derived from HiRISE imagery.
+- Explore a simulated lunar environment.
+- Manage habitat resources and life-support systems.
+- Monitor spacesuit oxygen and power.
+- Discover lunar landmarks and scientific context.
+- Complete mission activities and record discoveries.
 
-These links are **scientific references for learning and context**. The project does not download, bundle, or render those DEM files. The Moon and Mars playable surfaces remain procedural simulations; the resource cards explicitly say that the linked products are not inputs to the current 3D terrain. The Caltech Jezero page is credited to Caltech's Bruce Murray Laboratory rather than presented as a NASA-hosted dataset.
+### 🔴 Mars mission — Jezero Crater
 
-NASA is not affiliated with or endorsing this project. Follow the source pages' citation and usage guidance if their materials are reused beyond linking to them.
+Continue the journey with a 30-Sol expedition to **Jezero Crater**.
 
+- Explore a simulated Martian environment.
+- Manage essential mission and survival resources.
+- Use rover exploration systems.
+- Learn about the geology and environment of Mars.
+- Complete objectives and document discoveries.
+
+## 🎮 Gameplay features
+
+| Feature | What it offers |
+| --- | --- |
+| First-person exploration | Explore planetary environments from an astronaut's perspective. |
+| Mission management | Make decisions and manage resources throughout the expedition. |
+| Habitat life support | Monitor water, food, power, and environmental protection. |
+| Spacesuit systems | Keep track of oxygen and suit power. |
+| Rover systems | Support exploration across the mission environment. |
+| NOVA assistant | Get in-game guidance and assistance. |
+| Mission journal | Record observations and discoveries. |
+| Achievements | Track progress and accomplishments. |
+| Space weather | Learn about environmental challenges in space. |
+| Mission debrief | Review mission progress and outcomes. |
+| Educational Q&A and quizzes | Reinforce learning with questions and multiple-choice activities. |
+
+## 🧪 Learn through exploration
+
+BUILDSCAPES connects interactive gameplay with topics including:
+
+- Lunar and Martian environments
+- Human survival and life support in space
+- Spacesuit and rover systems
+- Planetary science and geology
+- Scientific observation and problem-solving
+- The challenges of long-duration exploration
+
+**Intended audience:** young learners aged 7–12.
+
+## 🛰️ Scientific resources and references
+
+The game includes source-linked educational references related to its exploration locations.
+
+### Moon — Shackleton Rim
+
+- [NASA LRO/LOLA — Lunar South Pole Site 04](https://pgda.gsfc.nasa.gov/products/78)
+- [NASA Moon Kit](https://svs.gsfc.nasa.gov/4720/)
+
+### Mars — Jezero Crater
+
+- [Caltech Bruce Murray Laboratory — Mars 2020 / Jezero resources](https://murray-lab.caltech.edu/Mars2020/index.html)
+
+These links provide scientific context and further reading. The Jezero resource is hosted by Caltech's Bruce Murray Laboratory, not presented as a NASA-hosted dataset.
+
+### Important terrain and data note
+
+The Moon and Mars first-person surfaces are deterministic, procedurally generated terrain simulations inspired by real planetary features. **The current playable terrain is not generated from NASA digital elevation models (DEMs).** The project does not download, bundle, or render the linked DEM files, and in-game X/Z positions are not registered to the listed latitude/longitude coordinates.
+
+The linked resources are educational references, not data inputs powering the current 3D terrain. Any future elevation-data integration should document dataset sources and usage terms, coordinate transformations, and a procedural fallback.
+
+NASA is credited as a source of mission facts where applicable. **NASA is not affiliated with, does not sponsor, and does not endorse this project.** Follow the source pages' citation and usage guidance when reusing their materials.
+
+## 🛠️ Run locally
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) **22.6 or later**
+- npm
+- Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/thomasjoseph18/Junior-Astronaut-Mission-Trainer.git
+cd Junior-Astronaut-Mission-Trainer
+```
+
+### 2. Install dependencies
+
+```bash
+npm ci
+```
+
+### 3. Start the development server
+
+```bash
+npm run dev
+```
+
+Open the local URL printed in the terminal.
+
+## 🧪 Quality checks
+
+Run these checks before submitting code changes:
+
+```bash
+npm run typecheck
+npm test
+npm run build
+```
+
+- `npm run typecheck` checks TypeScript.
+- `npm test` runs the project's automated tests.
+- `npm run build` creates the production build.
+
+## 🎯 Project goals
+
+1. Make space exploration engaging and accessible.
+2. Introduce young learners to planetary science.
+3. Demonstrate the challenges of astronaut survival.
+4. Encourage critical thinking and resource management.
+5. Connect interactive learning with real scientific references.
+
+## 🌍 Project information
+
+- **Project:** BUILDSCAPES — Junior Astronaut Mission Trainer
+- **Repository:** [Junior-Astronaut-Mission-Trainer](https://github.com/thomasjoseph18/Junior-Astronaut-Mission-Trainer)
+- **Team:** SOLO COMPOSER
+- **Audience:** Ages 7–12
+- **Category:** Educational Gaming / Space Exploration
+
+### Play the game
+
+[Launch BUILDSCAPES](https://sol-30.vercel.app/)
+
+## 👨‍🚀 Our vision
+
+Space exploration is about understanding unfamiliar environments, solving difficult problems, and discovering what humanity can achieve.
+
+**BUILDSCAPES brings that journey into an interactive learning experience.**
+
+*Explore. Survive. Discover.* 🚀
+
+---
+
+## Maintainer note: restoring the checkpoint
+
+If you are restoring the separately supplied checkpoint archive:
+
+1. Extract `buildscapes-checkpoint.zip` into a new folder. The archive intentionally excludes `node_modules` and `dist`.
+2. Use Node.js 22.6 or later, then run `npm install`, `npm run typecheck`, `npm test`, and `npm run dev`.
+3. To apply the checkpoint patch to the original repository, check the patch instructions and target branch before running `git am`.
+4. Consult `DEVELOPMENT_PROGRESS.md` for the recorded development status and follow-up notes.
