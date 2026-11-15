@@ -70,10 +70,21 @@ export interface PanelProps {
 
 function Modal({ title, kicker, onClose, children, narrow }: { title: string; kicker?: string; onClose: () => void; children: ReactNode; narrow?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { ref.current?.focus(); }, []);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    ref.current?.focus();
+    return () => { if (previous?.isConnected) previous.focus(); };
+  }, []);
   return (
     <div className="bs-modal-wrap" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className={`bs-panel bs-modal ${narrow ? 'bs-modal--narrow' : ''}`}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className={`bs-panel bs-modal ${narrow ? 'bs-modal--narrow' : ''}`} onKeyDown={(e) => {
+        if (e.key !== 'Tab') return;
+        const items = ref.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (!items?.length) { e.preventDefault(); ref.current?.focus(); return; }
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }}>
         <div className="bs-modal-head">
           <div>
             {kicker && <div className="bs-kicker">{kicker}</div>}
@@ -216,7 +227,7 @@ function Journal(p: PanelProps) {
     <Modal title="Mission journal" kicker={MISSIONS[p.destination].name} onClose={p.act.close}>
       <div className="bs-row" style={{ marginBottom: 14, flexWrap: 'nowrap' }}>
         <input className="bs-input" style={{ flex: 1 }} value={note} maxLength={240} placeholder="Write your own note…" aria-label="New journal note"
-          onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter' && note.trim()) { p.act.addJournalNote(note.trim()); setNote(''); } }} />
+          onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && note.trim()) { p.act.addJournalNote(note.trim()); setNote(''); } }} />
         <button className="bs-btn" disabled={!note.trim()} onClick={() => { p.act.addJournalNote(note.trim()); setNote(''); }}>Add</button>
       </div>
       {p.journal.length === 0 && <p className="bs-sub">Nothing yet. Your discoveries will be logged here.</p>}
@@ -405,9 +416,12 @@ function Site(p: PanelProps) {
 
 function SolBriefing(p: PanelProps) {
   const ev = p.sim.currentEvent;
-  const over = p.sim.missionStatus !== 'active';
+  const won = p.sim.missionStatus === 'victory';
+  const failed = p.sim.missionStatus === 'critical' || p.field.crewHealth <= 0;
+  const over = won || failed;
+  const title = won ? 'Mission complete' : failed ? 'Mission failed' : `Sol ${p.sim.currentSol} begins`;
   return (
-    <Modal title={over ? 'Mission complete' : `Sol ${p.sim.currentSol} begins`} kicker="Sol briefing" onClose={p.act.close} narrow>
+    <Modal title={title} kicker="Sol briefing" onClose={p.act.close} narrow>
       <p style={{ margin: 0, lineHeight: 1.6 }}>{p.sim.lastDebriefMessage}</p>
       {(p.panel.notes ?? []).map((n) => <p key={n} className="bs-sub" style={{ margin: '8px 0 0', color: 'var(--amber)' }}>⚠ {n}</p>)}
       {!over && (
@@ -489,7 +503,7 @@ function Pause(p: PanelProps) {
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 14 }}>
-          <label className="bs-row">Call sign <input className="bs-input" value={s.callSign} maxLength={24} aria-label="Call sign" onKeyDown={(e) => e.stopPropagation()} onChange={(e) => act.updateSettings({ callSign: e.target.value })} /></label>
+          <label className="bs-row">Call sign <input className="bs-input" value={s.callSign} maxLength={24} aria-label="Call sign" onChange={(e) => act.updateSettings({ callSign: e.target.value })} /></label>
           <div className="bs-row">Sound {toggle('audioEnabled')} Volume <input type="range" className="bs-slider" min={0} max={1} step={0.05} value={s.masterVolume} aria-label="Volume" onChange={(e) => act.updateSettings({ masterVolume: Number(e.target.value) })} /></div>
           <div className="bs-row">Spoken voice {toggle('novaVoiceEnabled')}</div>
           <div className="bs-row">Captions {toggle('captionsEnabled')}</div>
