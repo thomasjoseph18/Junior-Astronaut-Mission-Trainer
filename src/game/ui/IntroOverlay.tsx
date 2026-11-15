@@ -118,8 +118,10 @@ export function IntroOverlay({ timeRef, captions, reducedMotion, audioOn, replay
   // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === 'INPUT') return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      // Let focused buttons handle Enter/Space through their native click behavior.
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.closest('button')) return;
       if (e.key === 'Escape' || e.key === 'Enter') { if (phaseRef.current === 'title' && e.key === 'Enter') begin(); else onFinish(); }
       else if (e.code === 'Space') { e.preventDefault(); if (phaseRef.current === 'play') setPaused((p) => !p); else if (phaseRef.current === 'title') begin(); }
       else if (e.key === 'ArrowRight') jump(1);
@@ -162,7 +164,16 @@ export function IntroOverlay({ timeRef, captions, reducedMotion, audioOn, replay
       </div>
       <div className="bs-cine-controls">
         <button className="bs-btn" onClick={() => jump(-1)} aria-label="Previous scene">◀</button>
-        <button className="bs-btn" onClick={() => (phase === 'ended' ? (timeRef.current = 0, setPhase('play')) : setPaused((p) => !p))}>{phase === 'ended' ? 'Replay' : paused ? 'Play' : 'Pause'}</button>
+        <button className="bs-btn" onClick={() => {
+          if (phase === 'ended') {
+            timeRef.current = 0;
+            banged.current = false;
+            lastIdx.current = -1;
+            setIdx(0);
+            setProg(0);
+            setPhase('play');
+          } else setPaused((p) => !p);
+        }}>{phase === 'ended' ? 'Replay' : paused ? 'Play' : 'Pause'}</button>
         <button className="bs-btn" onClick={() => jump(1)} aria-label="Next scene">▶</button>
         <button className="bs-btn" onClick={onToggleCaptions} aria-pressed={captions}>CC {captions ? 'on' : 'off'}</button>
         <button className="bs-btn" onClick={onToggleAudio} aria-pressed={audioOn}>{audioOn ? 'Sound on' : 'Muted'}</button>
